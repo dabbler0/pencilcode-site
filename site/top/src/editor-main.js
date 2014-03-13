@@ -21,6 +21,7 @@ require.config({
     'draw-protractor': 'src/draw-protractor',
     'tooltipster': 'lib/tooltipster/js/jquery.tooltipster',
     'sourcemap': 'src/sourcemap',
+    'ice': 'lib/ice',
     'ZeroClipboard': 'lib/zeroclipboard/ZeroClipboard'
   },
   shim: {

@@ -22,6 +22,8 @@ document.write(
   pencilcode.domain + '/editor.css">' +
   '<link rel="stylesheet" type="text/css" href="//' +
   pencilcode.domain + '/lib/tooltipster/css/tooltipster.css">' +
+  '<link rel="stylesheet" type="text/css" href="//' +
+  pencilcode.domain + '/lib/ice.css">' +
   '<script src="//' + pencilcode.domain + '/turtlebits.js"><' +
   '/script>');
 </script>
@@ -59,7 +61,8 @@ htmlEscape(location.pathname.replace(/^\/(?:[^\/]*\/)?|\/$/g, '')),
 <div id="charlie" class="right pane" style="left:100%"></div>
 </div><!-- end clip -->
 <script src="/lib/ace/ace.js"></script> <!-- local URL for same-origin -->
-<script data-main="/src/editor-main" src="/src/require.js"></script>
+<script src="/lib/coffee-script.js"></script> <!-- local URL for same-origin -->
+<script>document.write('<script src="//' + window.pencilcode.domain + '/editor.js"></' + 'script>');</script>
 <script>
 (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
 (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
