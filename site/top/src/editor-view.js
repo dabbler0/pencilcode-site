@@ -2,8 +2,8 @@
 // VIEW SUPPORT
 ///////////////////////////////////////////////////////////////////////////
 
-define(['jquery', 'tooltipster', 'see'],
-function($, tooltipster, see) {
+define(['jquery', 'tooltipster', 'see', 'ice'],
+function($, tooltipster, see, ice) {
 
 // The view has three panes, #left, #right, and #back (the offscreen pane).
 //
@@ -1083,7 +1083,9 @@ function setPaneEditorText(pane, text, filename) {
   paneState.cleanText = text;
   paneState.dirtied = false;
   $('#' + pane).html('<div id="' + id + '" class="editor"></div>');
-  var editor = paneState.editor = ace.edit(id);
+  var iceEditor = paneState.iceEditor = new ice.Editor(document.getElementById(id), []);
+  window.latestIceEditor = iceEditor; // DEBUGGING
+  var editor = paneState.editor = iceEditor.ace;
   fixRepeatedCtrlFCommand(editor);
   updatePaneTitle(pane);
   editor.setTheme("ace/theme/chrome");
@@ -1102,7 +1104,8 @@ function setPaneEditorText(pane, text, filename) {
     $('.editor').css({fontWeight: 600, lineHeight: '121%'});
     editor.setFontSize(24);
   }
-  editor.setValue(text);
+  console.log(text);
+  iceEditor.setValue(text.replace(/\n+/g, '\n').trim());
   var um = editor.getSession().getUndoManager();
   um.reset();
   editor.getSession().setUndoManager(um);
@@ -1187,7 +1190,7 @@ function isPaneEditorDirty(pane) {
   if (paneState.dirtied) {
     return true;
   }
-  var text = paneState.editor.getSession().getValue();
+  var text = paneState.iceEditor.getValue();
   if (text != paneState.cleanText) {
     paneState.dirtied = true;
     return true;
@@ -1200,7 +1203,7 @@ function getPaneEditorText(pane) {
   if (!paneState.editor) {
     return null;
   }
-  var text = paneState.editor.getSession().getValue();
+  var text = paneState.iceEditor.getValue();
   text = normalizeCarriageReturns(text);
   // TODO: pick the right mime type
   return {text: text, mime: paneState.mimeType };
@@ -1295,7 +1298,7 @@ function notePaneEditorCleanText(pane, text) {
   if (!paneState.editor) {
     return;
   }
-  var editortext = paneState.editor.getSession().getValue();
+  var editortext = paneState.iceEditor.getValue();
   paneState.cleanText = text;
   if ((text == editortext) == (paneState.dirtied)) {
     paneState.dirtied = (text != editortext);

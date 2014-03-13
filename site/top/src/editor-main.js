@@ -5,7 +5,8 @@ require.config({
     'editor-storage': 'src/editor-storage',
     'editor-debug': 'src/editor-debug',
     'tooltipster': 'lib/tooltipster/js/jquery.tooltipster',
-    'sourcemap': 'src/sourcemap'
+    'sourcemap': 'src/sourcemap',
+    'ice': 'lib/ice'
   },
   shim: {
     'tooltipster': {

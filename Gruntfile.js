@@ -64,7 +64,8 @@ module.exports = function(grunt) {
           name: 'src/almond',
           out: 'site/top/editor.js',
           mainConfigFile: 'site/top/src/editor-main.js',
-          preserveLicenseComments: false
+          preserveLicenseComments: false,
+          optimize:'none'
         }
       }
     },
@@ -224,5 +225,6 @@ module.exports = function(grunt) {
   grunt.registerTask('debug', ['concat', 'devtest']);
   // default target: compile editor code and uglify turtlebits.js, and test it.
   grunt.registerTask('default', ['requirejs', 'replace', 'uglify', 'test']);
+  grunt.registerTask('buildonly', ['requirejs', 'replace']);
 };
 
