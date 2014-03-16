@@ -6,7 +6,7 @@ require.config({
     'editor-debug': 'src/editor-debug',
     'tooltipster': 'lib/tooltipster/js/jquery.tooltipster',
     'sourcemap': 'src/sourcemap',
-    'ice': 'lib/ice'
+    'ice': 'lib/ice',
     'ZeroClipboard': 'lib/zeroclipboard/ZeroClipboard'
   },
   shim: {
