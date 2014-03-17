@@ -899,6 +899,8 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
           # If we have clicked on a block or segment, then NORMAL DRAG, indicated by (@ephemeralSelection?)
 
           if @ephemeralSelection in @paletteBlocks
+            @ephemeralPoint = new draw.Point point.x - @paletteScrollOffset.x, point.y
+          else
             @ephemeralPoint = new draw.Point point.x, point.y
 
           # Move the cursor to the place we just clicked
