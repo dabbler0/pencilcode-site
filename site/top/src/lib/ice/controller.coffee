@@ -144,6 +144,9 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
       # Scroll offset
       @scrollOffset = new draw.Point 0, 0
 
+      # Palette scroll offset
+      @paletteScrollOffset = new draw.Point 0, 0
+
       # Touchscreen scrolling fields
       @touchScrollAnchor = null
 
@@ -456,6 +459,9 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
         block.moveTo target
 
         @triggerOnChangeEvent new IceEditorChangeEvent block, target
+
+      @clearPalette = =>
+        @paletteCtx.clearRect @paletteScrollOffset.x, @paletteScrollOffset.y, @palette.width, @palette.height
 
       # The redrawPalette function ought to be called only once in the current code structure.
       # If we want to scroll the palette later on, then this will be called to do so.
@@ -811,7 +817,10 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
       hitTestLasso = (point) => if @lassoSegment? and @_lassoBounds.contains point then @lassoSegment else null
 
       hitTestPalette = (point) =>
-        point = new draw.Point point.x + PALETTE_WIDTH, point.y - @scrollOffset.y
+        if point.x > 0
+          # The point is not on the palette.
+          return null
+        point = new draw.Point point.x + PALETTE_WIDTH, point.y
         for block in @paletteBlocks
           if hitTest(point, block.start)? then return block
         return null
@@ -820,12 +829,17 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
 
       # ### getPointFromEvent ###
       # This is a conveneince function, which will contain compatability layers for getting
-      # the offset coordinates of a mouse click point
+      # the offset coordinates of a mouse click point. It returns the coordinates relative to the top of the divider between the palette and main canvas.
 
       getPointFromEvent = (event) =>
-        switch
-          when event.offsetX? then new draw.Point event.offsetX - PALETTE_WIDTH, event.offsetY + @scrollOffset.y
-          when event.layerX then new draw.Point event.layerX - PALETTE_WIDTH, event.layerY + @scrollOffset.y
+        x = if event.offsetX then event.offsetX else event.layerX
+        y = if event.offsetY then event.offsetY else event.layerY
+        isPalettePoint = if x < PALETTE_WIDTH then true else false
+        scrollOffset = if isPalettePoint then @paletteScrollOffset else @scrollOffset
+        new draw.Point x - PALETTE_WIDTH, y + scrollOffset.y 
+#         switch
+#           when event.offsetX? then new draw.Point event.offsetX - PALETTE_WIDTH, event.offsetY + scrollOffset.y
+#           when event.layerX then new draw.Point event.layerX - PALETTE_WIDTH, event.layerY + scrollOffset.y
 
       performNormalMouseDown = (point, isTouchEvent) =>
 
@@ -885,8 +899,6 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
           # If we have clicked on a block or segment, then NORMAL DRAG, indicated by (@ephemeralSelection?)
 
           if @ephemeralSelection in @paletteBlocks
-            @ephemeralPoint = new draw.Point point.x - @scrollOffset.x, point.y - @scrollOffset.y
-          else
             @ephemeralPoint = new draw.Point point.x, point.y
 
           # Move the cursor to the place we just clicked
@@ -959,7 +971,7 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
             # CSS-transform the drag canvas to where it ought to be
             if selectionInPalette
               # If we picked up from the palette, then rect.x is actually relative to the palette
-              fixedDest = new draw.Point rect.x - PALETTE_WIDTH, rect.y
+              fixedDest = new draw.Point rect.x - PALETTE_WIDTH, rect.y - @paletteScrollOffset.y
             else
               # Otherwise, do as we would with mousemove
               fixedDest = new draw.Point rect.x - @scrollOffset.x, rect.y - @scrollOffset.y
@@ -975,12 +987,14 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
           # Determine the position of the mouse
           point = getPointFromEvent event
 
-          point.add -@scrollOffset.x, -@scrollOffset.y
+          scrollOffset = if point.x < 0 then @paletteScrollOffset else @scrollOffset
+
+          point.add -scrollOffset.x, -scrollOffset.y
 
           # First we find the highlighted area
           fixedDest = new draw.Point -offset.x + point.x, -offset.y + point.y # Where do we position things exactly in relation to the canvas?
 
-          point.translate @scrollOffset
+          point.translate scrollOffset
           dest = new draw.Point -offset.x + point.x, -offset.y + point.y # Where do we position things as related to the way we draw the root tree?
 
           old_highlight = highlight
@@ -1430,21 +1444,39 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
       # ## Mouse events for SCROLLING ##
 
       track.addEventListener 'mousewheel', (event) =>
-        @clear()
-
-        if event.wheelDelta > 0
-          if @scrollOffset.y >= SCROLL_INTERVAL
-            @scrollOffset.add 0, -SCROLL_INTERVAL
-            @mainCtx.translate 0, SCROLL_INTERVAL
+        if event.clientX < PALETTE_WIDTH
+          @clearPalette()
+  
+          if event.wheelDelta > 0
+            if @paletteScrollOffset.y >= SCROLL_INTERVAL
+              @paletteScrollOffset.add 0, -SCROLL_INTERVAL
+              @paletteCtx.translate 0, SCROLL_INTERVAL
+            else
+              # If we would go past the top of the file, just scroll to exactly the top of the file.
+              @paletteCtx.translate 0, @paletteScrollOffset.y
+              @paletteScrollOffset.y = 0
           else
-            # If we would go past the top of the file, just scroll to exactly the top of the file.
-            @mainCtx.translate 0, @scrollOffset.y
-            @scrollOffset.y = 0
+            @paletteScrollOffset.add 0, SCROLL_INTERVAL
+            @paletteCtx.translate 0, -SCROLL_INTERVAL
+  
+          @redrawPalette()
         else
-          @scrollOffset.add 0, SCROLL_INTERVAL
-          @mainCtx.translate 0, -SCROLL_INTERVAL
-
-        @redraw()
+          # TODO(tcurtis): Put this in a function.
+          @clear()
+  
+          if event.wheelDelta > 0
+            if @scrollOffset.y >= SCROLL_INTERVAL
+              @scrollOffset.add 0, -SCROLL_INTERVAL
+              @mainCtx.translate 0, SCROLL_INTERVAL
+            else
+              # If we would go past the top of the file, just scroll to exactly the top of the file.
+              @mainCtx.translate 0, @scrollOffset.y
+              @scrollOffset.y = 0
+          else
+            @scrollOffset.add 0, SCROLL_INTERVAL
+            @mainCtx.translate 0, -SCROLL_INTERVAL
+  
+          @redraw()
 
     setValue: (value) ->
       try
