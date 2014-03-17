@@ -72,6 +72,7 @@ window.pencilcode.view = {
   panepos: panepos,
   setPaneTitle: function(pane, html) { $('#' + pane + 'title_main').html(html); },
   setPaneTitleExtra: function(pane, html) { $('#' + pane + 'title_extra').html(html); },
+  setPaneEmphasizeMarkedBlocks: setPaneEmphasizeMarkedBlocks,
   clearPane: clearPane,
   setPaneEditorText: setPaneEditorText,
   getPaneEditorText: getPaneEditorText,
@@ -1509,6 +1510,14 @@ function getPaneEditorText(pane) {
   return {text: text, mime: paneState.mimeType };
 }
 
+function setPaneEmphasizeMarkedBlocks(pane) {
+  var paneState = state.pane[pane];
+  if (!paneState.iceEditor) return;
+  else {
+    paneState.iceEditor.setEmphasizeMarkedLines(true);
+  }
+}
+
 // Marks a line of the editor using the given CSS class
 // (using 1-based line numbering).
 // Marks are cumulative.  To clear all marks of a given class,
@@ -1527,6 +1536,11 @@ function getPaneEditorText(pane) {
 function markPaneEditorLine(pane, line, markclass) {
   var paneState = state.pane[pane];
   if (!paneState.editor) {
+    return;
+  }
+  if (paneState.iceEditor.currentlyUsingBlocks) {
+    paneState.iceEditor.unmarkLines();
+    paneState.iceEditor.markLine(line - 1);
     return;
   }
   // ACE uses zero-based line numbering.

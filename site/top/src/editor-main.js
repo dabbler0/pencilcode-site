@@ -323,6 +323,7 @@ view.on('run', function() {
   var runtext = mimetext && mimetext.text;
   var newdata = $.extend({}, modelatpos('left').data, {data: runtext});
   view.clearPaneEditorMarks(paneatpos('left'));
+  view.setPaneEmphasizeMarkedBlocks(paneatpos('left'));
   if (!specialowner()) {
     // Save file (backup only)
     storage.saveFile(model.ownername,

@@ -395,14 +395,20 @@ define ['ice-view'], (view) ->
       stack = []
       head = @start
       lineCount = 0
-      until lineCount is line
+      until lineCount is line or not head?
+        while head.type is 'cursor' then head = head.next
+
         switch head.type
           when 'blockStart' then stack.push head.block
           when 'blockEnd' then stack.pop()
           when 'newline' then lineCount++
+
         head = head.next
 
-      return stack[stack.length+1]
+      while head.type is 'cursor' then head = head.next
+      if head?.type is 'blockStart' then stack.push head.block
+
+      return stack[stack.length - 1]
 
   # # Socket
   # A Socket is an inline droppable area for a Block, and

@@ -101,6 +101,8 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
       # ## Field declaration ##
       # (useful to have all in one place)
 
+      @emphasizeMarkedLines = false
+
       # If we did not recieve palette blocks in the constructor, we have no palette.
       @paletteBlocks ?= []
 
@@ -223,7 +225,7 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
         @tree.view.compute()
 
         # Draw it on the main context
-        @tree.view.draw @mainCtx
+        @tree.view.draw @mainCtx, @emphasizeMarkedLines
 
         # Alert the lasso segment, if it exists, to recompute its bounds
         if @lassoSegment?
@@ -326,6 +328,8 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
       # ## addMicroUndoOperation ##
       # Bureaucracy wrapper for pushing to the undo stack.
       addMicroUndoOperation = (operation) =>
+        @emphasizeMarkedLines = false
+
         # For clarity, we ensure that the operation
         # is of one of the known types.
         unless operation?.type in [
@@ -530,6 +534,8 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
           @redraw()
 
       moveCursorTo = (token) =>
+        @emphasizeMarkedLines = false
+
         # Splice out
         @cursor.remove()
 
@@ -555,6 +561,8 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
         scrollCursorIntoView()
 
       moveCursorBefore = (token) =>
+        @emphasizeMarkedLines = false
+
         # Splice out
         @cursor.remove()
 
@@ -829,6 +837,7 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
           when event.layerX then new draw.Point event.layerX - PALETTE_WIDTH, event.layerY + @scrollOffset.y
 
       performNormalMouseDown = (point, isTouchEvent) =>
+        @emphasizeMarkedLines = false
 
         # See what we picked up
         @ephemeralSelection = hitTestFloating(point) ?
@@ -1663,8 +1672,20 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
       if @currentlyUsingBlocks then @_performMeltAnimation()
       else @_performFreezeAnimation()
 
+    setEmphasizeMarkedLines: (value) ->
+      @emphasizeMarkedLines = value
+
     markLine: (line) ->
-      @tree.getBlockOnLine(line).lineMarked = true
+      block = @tree.getBlockOnLine(line)
+      unless block? then return
+      
+      block.lineMarked = true
       @redraw()
+
+    unmarkLines: ->
+      head = @tree.start
+      until head is @tree.end
+        if head.type is 'blockStart' then head.block.lineMarked = false
+        head = head.next
 
   return exports
