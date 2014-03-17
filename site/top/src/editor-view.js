@@ -2,7 +2,7 @@
 // VIEW SUPPORT
 ///////////////////////////////////////////////////////////////////////////
 
-define(['jquery', 'tooltipster', 'see', 'ice', 'ZeroClipBoard'],
+define(['jquery', 'tooltipster', 'see', 'ice', 'ZeroClipboard'],
 function($, tooltipster, see, ice, ZeroClipboard) {
 
 // The view has three panes, #left, #right, and #back (the offscreen pane).
