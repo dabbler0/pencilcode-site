@@ -14,7 +14,7 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
   PALETTE_TOP_MARGIN = 0
   PALETTE_WIDTH = 300
   MIN_DRAG_DISTANCE = 5
-  FONT_SIZE = 15
+  FONT_SIZE = 24
   ANIMATION_FRAME_RATE = 50 # FPS
   SCROLL_INTERVAL = 50
 
@@ -92,7 +92,7 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
       @ace.getSession().setMode 'ace/mode/coffee'
       @ace.getSession().setTabSize 2
       @ace.setShowPrintMargin false
-      @ace.setFontSize 15
+      @ace.setFontSize FONT_SIZE
 
       @el = document.createElement 'div'; @el.className = 'ice_editor'
       wrapper.appendChild @el
