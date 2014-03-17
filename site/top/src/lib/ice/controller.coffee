@@ -94,7 +94,7 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
       @ace.setShowPrintMargin false
       @ace.setFontSize FONT_SIZE
 
-      @el = document.createElement 'div'; @el.className = 'ice_editor'
+      @el = document.createElement 'div'; @el.className = 'ice_editor'; @el.tabIndex = 0
       wrapper.appendChild @el
 
 
@@ -723,8 +723,8 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
 
               @redraw()
               event.preventDefault(); return false
-          when 38 then setTextInputFocus null; @hiddenInput.blur(); moveCursorUp(); @redraw()
-          when 40 then setTextInputFocus null; @hiddenInput.blur(); moveCursorDown(); @redraw()
+          when 38 then setTextInputFocus null; @hiddenInput.blur(); moveCursorUp(); @el.focus(); @redraw()
+          when 40 then setTextInputFocus null; @hiddenInput.blur(); moveCursorDown(); @el.focus(); @redraw()
           when 37 then if @hiddenInput.selectionStart is @hiddenInput.selectionEnd and @hiddenInput.selectionStart is 0
             # Pressing the left-arrow at the leftmost end of a socket brings us to the previous socket
             head = @focus.start
@@ -753,7 +753,7 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
 
       # Bind keyboard shortcut events to the document
 
-      document.body.addEventListener 'keydown', (event) =>
+      @el.addEventListener 'keydown', (event) =>
         # Keyboard shortcuts don't apply if they were executed in a text input area
         if event.target.tagName in ['INPUT', 'TEXTAREA'] then return
 
