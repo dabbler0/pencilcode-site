@@ -254,7 +254,12 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
           # Draw it on the main context
           view.draw @mainCtx
 
-        if @currentlyUsingBlocks == BOTH and @currentlyAnimating == false then @ace.setValue @getValue(), -1
+        # hacky approach to updating the other view.
+        if @currentlyUsingBlocks == BOTH and @currentlyAnimating == false
+          @currentlyAnimating = true
+          @main.style.backgroundColor = "#EEEEEE"
+          @ace.setValue @getValue(), -1
+          @currentlyAnimating = false
 
       # ## attemptReparse ##
       # This will be triggered by most cursor operations. It finds all handwritten blocks that do not contain the cursor,
@@ -1713,6 +1718,14 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
         success: true
       }
 
+    _performUpdateFromText: ->
+      @currentlyAnimating = true
+      setValueResult = @setValue @ace.getValue()[...-1]
+      if setValueResult.success == false
+        @main.style.backgroundColor = "#FFCCCC"
+      else
+        @main.style.backgroundColor = "#EEEEEE"
+      @currentlyAnimating = false
 
     toggleBlocks: ->
       if @currentlyUsingBlocks == ICE then @_performMeltAnimation()
@@ -1722,6 +1735,13 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
     toggleBoth: ->
       if @currentlyUsingBlocks == ICE then @_performBothAnimation()
       else if @currentlyUsingBlocks == BOTH then @_performOneAnimation()
+
+    notifyChange: ->
+      if @currentlyUsingBlocks == BOTH and @currentlyAnimating == false
+        newText = @ace.getValue()[...-1]
+        if newText != @lastText
+          @_performUpdateFromText(newText)
+        @lastText = newText
 
     setEmphasizeMarkedLines: (value) ->
       @emphasizeMarkedLines = value

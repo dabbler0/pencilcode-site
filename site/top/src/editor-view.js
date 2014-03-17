@@ -1422,6 +1422,10 @@ function setPaneEditorText(pane, text, filename) {
     if (!paneState.dirtied) {
       fireEvent('dirty', [pane]);
     }
+    // In case ice editor is dynamically updating.
+    var pos = editor.getCursorPosition();
+    paneState.iceEditor.notifyChange();
+    editor.moveCursorToPosition(pos);
   });
   if (long) {
     editor.gotoLine(0);
