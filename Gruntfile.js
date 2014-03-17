@@ -261,4 +261,3 @@ module.exports = function(grunt) {
   grunt.registerTask('default', ['coffee', 'requirejs', 'replace', 'uglify', 'test']);
   grunt.registerTask('buildonly', ['coffee', 'requirejs', 'replace', 'uglify']);
 };
-
