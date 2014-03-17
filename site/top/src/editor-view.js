@@ -1330,9 +1330,23 @@ function fixRepeatedCtrlFCommand(editor) {
   }])
 }
 
-// Builds palette to pass to the ICE editor constructor.
+function parseToBlock(codeString) {
+    return ice.parse(codeString).next.block;
+}
+
+// Builds palette to pass to the ICE editor constructor. Returns an array of blocks.
 function buildPalette() {
-    return [];
+    var blocks = [
+	'fd 100',
+	'bk 100',
+	'rt 90',
+	'lt 90',
+	'see \'hi\'',
+	'for i in [1..10]\n  fd 10',
+	'if touches \'red\'\n  fd 10',
+	'rtFd = (arg) ->\n  rt 90\n  fd arg\n  return arg'
+    ].map(parseToBlock);
+    return blocks;
 }
 
 // Initializes an (ACE) editor into a pane, using the given text and the
@@ -1351,7 +1365,6 @@ function setPaneEditorText(pane, text, filename) {
   paneState.dirtied = false;
   var palette = buildPalette(); 
   $('#' + pane).html('<div id="' + id + '" class="editor"></div>');
-    
     var iceEditor = paneState.iceEditor = new ice.Editor(document.getElementById(id), buildPalette());
   window.latestIceEditor = iceEditor; // DEBUGGING
   var editor = paneState.editor = iceEditor.ace;
