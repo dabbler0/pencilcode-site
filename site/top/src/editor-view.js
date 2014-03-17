@@ -2,8 +2,8 @@
 // VIEW SUPPORT
 ///////////////////////////////////////////////////////////////////////////
 
-define(['jquery', 'tooltipster', 'see', 'ice', 'ZeroClipboard'],
-function($, tooltipster, see, ice, ZeroClipboard) {
+define(['jquery', 'tooltipster', 'see', 'ice', 'draw-protractor', 'ZeroClipboard'],
+function($, tooltipster, see, ice, drawProtractor, ZeroClipboard) {
 
 // The view has three panes, #left, #right, and #back (the offscreen pane).
 //
@@ -1382,6 +1382,12 @@ function setPaneEditorText(pane, text, filename) {
   $('#' + pane).html('<div id="' + id + '" class="editor"></div>');
   var palette = buildPalette(); 
   var iceEditor = paneState.iceEditor = new ice.Editor(document.getElementById(id), buildPalette());
+  iceEditor.onLineHover = function(ev) {
+    state.callbacks['icehover'] && state.callbacks['icehover'](pane, ev);
+  }
+  iceEditor.onChange = function() {
+    fireEvent('dirty', [pane]);
+  }
   //window.latestIceEditor = iceEditor; // DEBUGGING
   var editor = paneState.editor = iceEditor.ace;
   fixRepeatedCtrlFCommand(editor);

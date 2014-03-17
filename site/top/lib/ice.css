@@ -41,6 +41,7 @@
   -webkit-user-select: none;
   user-select: none;
   background-color: #EEE;
+  outline: none;
 }
 .fullscreen_textarea {
   border: 1px solid black; padding: none;
