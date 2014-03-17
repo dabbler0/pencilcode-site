@@ -9,6 +9,21 @@ module.exports = function(grunt) {
 
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
+    coffee: {
+      options: {
+        sourceMap: true
+      },
+      build: {
+        files: {
+          'src/lib/ice/js/draw.js': 'src/lib/ice/draw.coffee',
+          'src/lib/ice/js/model.js': 'src/lib/ice/model.coffee',
+          'src/lib/ice/js/view.js': 'src/lib/ice/view.coffee',
+          'src/lib/ice/js/controller.js': 'src/lib/ice/controller.coffee',
+          'src/lib/ice/js/coffee.js': 'src/lib/ice/coffee.coffee',
+          'src/lib/ice/js/main.js': 'src/lib/ice/main.coffee'
+        }
+      }
+    },
     bowercopy: {
       options: {
         clean: true
@@ -195,6 +210,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-contrib-requirejs');
+  grunt.loadNpmTasks('grunt-contrib-coffee');
   grunt.loadNpmTasks('grunt-replace');
   grunt.loadNpmTasks('grunt-express-server');
   grunt.loadNpmTasks('grunt-contrib-watch');
@@ -242,7 +258,7 @@ module.exports = function(grunt) {
   // "debug" overwrites turtlebits.js with an unminified version.
   grunt.registerTask('debug', ['concat', 'devtest']);
   // default target: compile editor code and uglify turtlebits.js, and test it.
-  grunt.registerTask('default', ['requirejs', 'replace', 'uglify', 'test']);
-  grunt.registerTask('buildonly', ['requirejs', 'replace']);
+  grunt.registerTask('default', ['coffee', 'requirejs', 'replace', 'uglify', 'test']);
+  grunt.registerTask('buildonly', ['coffee', 'requirejs', 'replace']);
 };
 

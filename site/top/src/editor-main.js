@@ -6,8 +6,14 @@ require.config({
     'editor-debug': 'src/editor-debug',
     'tooltipster': 'lib/tooltipster/js/jquery.tooltipster',
     'sourcemap': 'src/sourcemap',
-    'ice': 'lib/ice',
-    'ZeroClipboard': 'lib/zeroclipboard/ZeroClipboard'
+    'ZeroClipboard': 'lib/zeroclipboard/ZeroClipboard',
+
+    'ice-view': 'src/lib/ice/js/view',
+    'ice-controller': 'src/lib/ice/js/controller',
+    'ice-model': 'src/lib/ice/js/model',
+    'ice-draw': 'src/lib/ice/js/draw',
+    'ice-coffee': 'src/lib/ice/js/coffee',
+    'ice': 'src/lib/ice/js/main'
   },
   shim: {
     'tooltipster': {
