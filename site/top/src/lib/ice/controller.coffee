@@ -14,7 +14,7 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
   PALETTE_TOP_MARGIN = 0
   PALETTE_WIDTH = 300
   MIN_DRAG_DISTANCE = 5
-  FONT_SIZE = 15
+  FONT_SIZE = 24
   ANIMATION_FRAME_RATE = 50 # FPS
   SCROLL_INTERVAL = 50
 
@@ -92,7 +92,7 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
       @ace.getSession().setMode 'ace/mode/coffee'
       @ace.getSession().setTabSize 2
       @ace.setShowPrintMargin false
-      @ace.setFontSize 15
+      @ace.setFontSize FONT_SIZE
 
       @el = document.createElement 'div'; @el.className = 'ice_editor'
       wrapper.appendChild @el
@@ -1482,10 +1482,11 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
       # We need to find out some properties of dimensions
       # in the ace editor. So we will need to display the ace editor momentarily off-screen.
 
-      @ace.setValue @getValue(), -1
-      @aceEl.style.top = -9999
-      @aceEl.style.left = -9999
+      @aceEl.style.opacity = 0
       @aceEl.style.display = 'block'
+      @ace.setValue @getValue(), -1
+      #@aceEl.style.top = -9999
+      #@aceEl.style.left = -9999
 
       # We must wait for the Ace editor to render before we continue.
       # Ace actually takes some time with webworkers to determine some things like line height,
@@ -1512,7 +1513,7 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
           lineHeight: @ace.renderer.layerConfig.lineHeight
           leftEdge: @ace.container.getBoundingClientRect().left - findPosLeft(@aceEl) + @ace.renderer.$gutterLayer.gutterWidth
 
-        while head isnt @tree.end
+        while head isnt @tree.end and head != null
           if head.type is 'text'
             translationVectors.push head.view.computePlaintextTranslationVector state, @mainCtx
             textElements.push head
@@ -1559,9 +1560,7 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
           if count >= ANIMATION_FRAME_RATE
             @el.style.display = 'none'
 
-            @aceEl.style.top = 0
-            @aceEl.style.left = 0
-            @aceEl.style.display = 'block'
+            @aceEl.style.opacity = 1
             @aceEl.style.height = '100%'
 
             # We need to trigger an ace resize event by hand,
@@ -1605,7 +1604,7 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
         indent: 0
         lineHeight: @ace.renderer.layerConfig.lineHeight
         leftEdge: @ace.container.getBoundingClientRect().left - findPosLeft(@aceEl) + @ace.renderer.$gutterLayer.gutterWidth
-      while head isnt @tree.end
+      while head isnt @tree.end and head != null
         if head.type is 'text'
           translationVectors.push head.view.computePlaintextTranslationVector state, @mainCtx
           head.view.translate translationVectors[translationVectors.length - 1]

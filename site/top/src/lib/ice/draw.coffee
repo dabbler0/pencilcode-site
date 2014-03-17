@@ -208,7 +208,7 @@ define ->
       ctx.stroke()
 
   _CTX = null #Hacky, hacky, hacky
-  _FONT_SIZE = 15
+  _FONT_SIZE = 24
 
   # ## Text ##
   # A Text element. Mainly this exists for computing bounding boxes, which is
@@ -235,7 +235,7 @@ define ->
 
   exports._setCTX = (ctx) -> _CTX = ctx
   exports._setGlobalFontSize = (size) ->
-    _FONT_SIZE = 15
+    _FONT_SIZE = 24
 
   return exports
 

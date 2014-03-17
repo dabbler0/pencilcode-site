@@ -9,7 +9,7 @@ define ['ice-draw'], (draw) ->
   PADDING = 5
   INDENT_SPACING = 15
   TOUNGE_HEIGHT = 10
-  FONT_HEIGHT = 15
+  FONT_HEIGHT = 24
   EMPTY_SOCKET_HEIGHT = FONT_HEIGHT + PADDING * 2
   EMPTY_SOCKET_WIDTH = 20
   EMPTY_INDENT_HEIGHT = FONT_HEIGHT + PADDING * 2
@@ -84,7 +84,7 @@ define ['ice-draw'], (draw) ->
 
       # Linked-list loop through inner tokens
       head = @block.start.next
-      while head isnt @block.end
+      while head isnt @block.end and head != null
         switch head.type
           when 'blockStart'
             # Ask this child to compute its children (thus determining its ending line, as well)
