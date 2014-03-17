@@ -8,7 +8,7 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
 
   PADDING = 5
   INDENT_SPACES = 2
-  INPUT_LINE_HEIGHT = 15
+  INPUT_LINE_HEIGHT = 24
   PALETTE_MARGIN = 10
   PALETTE_LEFT_MARGIN = 0
   PALETTE_TOP_MARGIN = 0
@@ -161,7 +161,7 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
       # The main canvas
       @main = document.createElement 'canvas'; @main.className = 'canvas'
       @main.height = @el.offsetHeight
-      @main.width = @el.offsetWidth - PALETTE_WIDTH
+      @main.width = @el.offsetWidth * 2 - PALETTE_WIDTH
 
       # The palette canvas
       @palette = document.createElement 'canvas'; @palette.className = 'palette'
@@ -172,7 +172,7 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
       drag = document.createElement 'canvas'; drag.className = 'drag'
       drag.style.opacity = 0.85
       drag.height = @el.offsetHeight
-      drag.width = @el.offsetWidth - PALETTE_WIDTH
+      drag.width = @el.offsetWidth * 2 - PALETTE_WIDTH
 
       # The hidden input
       @hiddenInput = document.createElement 'input'; @hiddenInput.className = 'hidden_input'
@@ -195,12 +195,12 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
       # Resize the canvases when the window resizes
       window.addEventListener 'resize', @resize = =>
         @main.height = @el.offsetHeight
-        @main.width = @el.offsetWidth - PALETTE_WIDTH
+        @main.width = @el.offsetWidth * 2 - PALETTE_WIDTH
 
         @palette.height = @el.offsetHeight
 
         drag.height = @el.offsetHeight
-        drag.width = @el.offsetWidth - PALETTE_WIDTH
+        drag.width = @el.offsetWidth * 2- PALETTE_WIDTH
 
         @redraw()
         @redrawPalette()
@@ -1448,15 +1448,25 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
         @redraw()
 
     setValue: (value) ->
+      errorSource = null
       try
         @ace.setValue value, -1
+        
         @tree = coffee.parse(value).segment
         @lastEditorState = @tree.clone()
-        @redraw()
-      catch
-        return false
 
-      return true
+        @redraw()
+
+      catch e
+        return {
+          errorSource: errorSource
+          error: e
+          success: false
+        }
+
+      return {
+        success: true
+      }
 
     getValue: -> @tree.stringify()
 
@@ -1564,7 +1574,9 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
         tick()
       ), 1
 
-      return true
+      return {
+        success: true
+      }
 
     _performFreezeAnimation: ->
       if @currentlyAnimating or @currentlyUsingBlocks then return
@@ -1572,9 +1584,10 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
 
       # In the case that we do not successfully set our value
       # (i.e. we failed to parse the text), give up immediately.
-      unless @setValue @ace.getValue(), -1
+      setValueResult = @setValue @ace.getValue()[...-1]
+      unless setValueResult.success is true
         @currentlyAnimating = false; @currentlyUsingBlocks = false
-        return false
+        return setValueResult
 
       @redraw()
       # First, we will need to get all the text elements which we will be animating.
@@ -1642,10 +1655,16 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
 
       tick()
 
-      return true
+      return {
+        success: true
+      }
 
     toggleBlocks: ->
       if @currentlyUsingBlocks then @_performMeltAnimation()
       else @_performFreezeAnimation()
+
+    markLine: (line) ->
+      @tree.getBlockOnLine(line).lineMarked = true
+      @redraw()
 
   return exports

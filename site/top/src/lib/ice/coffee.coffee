@@ -284,8 +284,8 @@ define ['ice-model'], (model) ->
       # Append the newline token
       head = head.append new model.NewlineToken()
 
+      ###
       if line.trimLeft().length is 0
-        console.log 'saw empty line'
         newBlock = new model.Block(); newSocket = new model.Socket null
         newSocket.handwritten = true
 
@@ -295,6 +295,7 @@ define ['ice-model'], (model) ->
         head.append newBlock.start
         head = newBlock.end
         continue
+      ###
       
       # Insert necessary markup on this line
       lastMark = 0
