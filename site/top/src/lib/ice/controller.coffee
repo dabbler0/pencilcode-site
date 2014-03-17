@@ -8,7 +8,7 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
 
   PADDING = 5
   INDENT_SPACES = 2
-  INPUT_LINE_HEIGHT = 15
+  INPUT_LINE_HEIGHT = 24
   PALETTE_MARGIN = 10
   PALETTE_LEFT_MARGIN = 0
   PALETTE_TOP_MARGIN = 0
@@ -161,7 +161,7 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
       # The main canvas
       @main = document.createElement 'canvas'; @main.className = 'canvas'
       @main.height = @el.offsetHeight
-      @main.width = @el.offsetWidth - PALETTE_WIDTH
+      @main.width = @el.offsetWidth * 2 - PALETTE_WIDTH
 
       # The palette canvas
       @palette = document.createElement 'canvas'; @palette.className = 'palette'
@@ -172,7 +172,7 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
       drag = document.createElement 'canvas'; drag.className = 'drag'
       drag.style.opacity = 0.85
       drag.height = @el.offsetHeight
-      drag.width = @el.offsetWidth - PALETTE_WIDTH
+      drag.width = @el.offsetWidth * 2 - PALETTE_WIDTH
 
       # The hidden input
       @hiddenInput = document.createElement 'input'; @hiddenInput.className = 'hidden_input'
@@ -195,12 +195,12 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
       # Resize the canvases when the window resizes
       window.addEventListener 'resize', @resize = =>
         @main.height = @el.offsetHeight
-        @main.width = @el.offsetWidth - PALETTE_WIDTH
+        @main.width = @el.offsetWidth * 2 - PALETTE_WIDTH
 
         @palette.height = @el.offsetHeight
 
         drag.height = @el.offsetHeight
-        drag.width = @el.offsetWidth - PALETTE_WIDTH
+        drag.width = @el.offsetWidth * 2- PALETTE_WIDTH
 
         @redraw()
         @redrawPalette()
