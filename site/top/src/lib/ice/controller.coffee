@@ -1620,7 +1620,7 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
         if count < ANIMATION_FRAME_RATE
           setTimeout tick, 1000 / ANIMATION_FRAME_RATE
 
-        @main.style.left = PALETTE_WIDTH * (count / ANIMATION_FRAME_RATE)
+        @main.style.left = "#{PALETTE_WIDTH * (count / ANIMATION_FRAME_RATE)}px"
         @el.style.backgroundColor = @main.style.backgroundColor = animatedColor.advance()
         @palette.style.opacity = Math.max 0, 1 - 2 * (1 - count / ANIMATION_FRAME_RATE)
 
