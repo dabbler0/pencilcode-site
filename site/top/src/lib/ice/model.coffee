@@ -74,7 +74,7 @@ define ['ice-view'], (view) ->
   # wrap itself in parentheses
 
   exports.Block = class Block
-    constructor: (@precedence = 0, @color = '#ddf') ->
+    constructor: (@precedence = 0, @color = '#ddf', @linedMarked = false) ->
       @start = new BlockStartToken this
       @end = new BlockEndToken this
 
@@ -388,6 +388,21 @@ define ['ice-view'], (view) ->
       while head.type in ['segmentStart', 'segmentEnd', 'cursor']
         head = head.next
       return head
+    
+    # ## getBlockOnLine ##
+    # Used by the controller for line marking. Get the block on the given line.
+    getBlockOnLine: (line) ->
+      stack = []
+      head = @start
+      lineCount = 0
+      until lineCount is line
+        switch head.type
+          when 'blockStart' then stack.push head.block
+          when 'blockEnd' then stack.pop()
+          when 'newline' then lineCount++
+        head = head.next
+
+      return stack[stack.length+1]
 
   # # Socket
   # A Socket is an inline droppable area for a Block, and

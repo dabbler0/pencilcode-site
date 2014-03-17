@@ -1663,4 +1663,8 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
       if @currentlyUsingBlocks then @_performMeltAnimation()
       else @_performFreezeAnimation()
 
+    markLine: (line) ->
+      @tree.getBlockOnLine(line).lineMarked = true
+      @redraw()
+
   return exports
