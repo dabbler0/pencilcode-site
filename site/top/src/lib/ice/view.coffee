@@ -84,7 +84,7 @@ define ['ice-draw'], (draw) ->
 
       # Linked-list loop through inner tokens
       head = @block.start.next
-      while head isnt @block.end
+      while head isnt @block.end and head != null
         switch head.type
           when 'blockStart'
             # Ask this child to compute its children (thus determining its ending line, as well)

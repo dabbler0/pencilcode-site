@@ -16,7 +16,7 @@ define ['ice-view'], (view) ->
     # This is "while true" to simulate a kind of
     # do-while; we want to actually perform this action
     # the first time our condition is true but no more.
-    while true
+    while head != null
       switch head.type
         when 'blockStart'
           block_clone = head.block.clone()
