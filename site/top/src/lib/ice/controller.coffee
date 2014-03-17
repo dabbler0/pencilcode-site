@@ -191,6 +191,18 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
 
       # The main context will be used for draw.js's text measurements (this is a bit of a hack)
       draw._setCTX @mainCtx
+    
+      # Resize the canvases when the window resizes
+      window.addEventListener 'resize', @resize = =>
+        @main.height = @el.offsetHeight
+        @main.width = @el.offsetWidth - PALETTE_WIDTH
+
+        @palette.height = @el.offsetHeight
+
+        drag.height = @el.offsetHeight
+        drag.width = @el.offsetWidth - PALETTE_WIDTH
+
+        @redraw()
 
       # ## Convenience Functions ##
       # General-purpose methods that call the view (rendering functions)

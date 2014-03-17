@@ -285,6 +285,7 @@ define ['ice-model'], (model) ->
       head = head.append new model.NewlineToken()
 
       if line.trimLeft().length is 0
+        console.log 'saw empty line'
         newBlock = new model.Block(); newSocket = new model.Socket null
         newSocket.handwritten = true
 
