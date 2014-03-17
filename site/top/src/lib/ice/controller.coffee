@@ -460,6 +460,7 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
 
         @triggerOnChangeEvent new IceEditorChangeEvent block, target
 
+      # Clears the palette canvas.
       @clearPalette = =>
         @paletteCtx.clearRect @paletteScrollOffset.x, @paletteScrollOffset.y, @palette.width, @palette.height
 
@@ -818,7 +819,7 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
 
       hitTestPalette = (point) =>
         if point.x > 0
-          # The point is not on the palette.
+          # The point is not on the palette, but on the main canvas.
           return null
         point = new draw.Point point.x + PALETTE_WIDTH, point.y
         for block in @paletteBlocks
@@ -829,17 +830,15 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
 
       # ### getPointFromEvent ###
       # This is a conveneince function, which will contain compatability layers for getting
-      # the offset coordinates of a mouse click point. It returns the coordinates relative to the top of the divider between the palette and main canvas.
-
+      # the offset coordinates of a mouse click point.
+      # The coordinates returned by this function are relative to the top of the
+      # divider between the palette and main canvases.
       getPointFromEvent = (event) =>
         x = if event.offsetX then event.offsetX else event.layerX
         y = if event.offsetY then event.offsetY else event.layerY
         isPalettePoint = if x < PALETTE_WIDTH then true else false
         scrollOffset = if isPalettePoint then @paletteScrollOffset else @scrollOffset
         new draw.Point x - PALETTE_WIDTH, y + scrollOffset.y 
-#         switch
-#           when event.offsetX? then new draw.Point event.offsetX - PALETTE_WIDTH, event.offsetY + scrollOffset.y
-#           when event.layerX then new draw.Point event.layerX - PALETTE_WIDTH, event.layerY + scrollOffset.y
 
       performNormalMouseDown = (point, isTouchEvent) =>
 
@@ -1447,6 +1446,7 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
 
       track.addEventListener 'mousewheel', (event) =>
         if event.clientX < PALETTE_WIDTH
+          # Handle mousewheel in the palette canvas.
           @clearPalette()
   
           if event.wheelDelta > 0
@@ -1463,7 +1463,7 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
   
           @redrawPalette()
         else
-          # TODO(tcurtis): Put this in a function.
+          # Handle mousewheel in the main canvas.
           @clear()
   
           if event.wheelDelta > 0
