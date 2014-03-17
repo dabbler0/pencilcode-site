@@ -17,6 +17,9 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
   FONT_SIZE = 24
   ANIMATION_FRAME_RATE = 50 # FPS
   SCROLL_INTERVAL = 50
+  ICE = 0
+  ACE = 1
+  BOTH = 2
 
   exports = {}
 
@@ -156,7 +159,7 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
 
       # Remember the current editor state, so
       # that we can refuse animations that do not apply.
-      @currentlyUsingBlocks = true
+      @currentlyUsingBlocks = ICE
 
       # ## DOM SETUP ##
 
@@ -260,6 +263,13 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
 
           # Draw it on the main context
           view.draw @mainCtx
+
+        # hacky approach to updating the other view.
+        if @currentlyUsingBlocks == BOTH and @currentlyAnimating == false
+          @currentlyAnimating = true
+          @main.style.backgroundColor = "#EEEEEE"
+          @ace.setValue @getValue(), -1
+          @currentlyAnimating = false
 
       # ## attemptReparse ##
       # This will be triggered by most cursor operations. It finds all handwritten blocks that do not contain the cursor,
@@ -1493,8 +1503,8 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
     # This will animate all the text elements from their current position to a position
     # that imitates plaintext.
     _performMeltAnimation: ->
-      if @currentlyAnimating or not @currentlyUsingBlocks then return
-      else @currentlyAnimating = true; @currentlyUsingBlocks = false
+      if @currentlyAnimating or @currentlyUsingBlocks == ACE then return
+      else @currentlyAnimating = true; @currentlyUsingBlocks = ACE
 
       @redraw()
 
@@ -1598,14 +1608,14 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
       }
 
     _performFreezeAnimation: ->
-      if @currentlyAnimating or @currentlyUsingBlocks then return
-      else @currentlyAnimating = true; @currentlyUsingBlocks = true
+      if @currentlyAnimating or @currentlyUsingBlocks == ICE then return
+      else @currentlyAnimating = true; @currentlyUsingBlocks = ICE
 
       # In the case that we do not successfully set our value
       # (i.e. we failed to parse the text), give up immediately.
       setValueResult = @setValue @ace.getValue()[...-1]
       unless setValueResult.success is true
-        @currentlyAnimating = false; @currentlyUsingBlocks = false
+        @currentlyAnimating = false; @currentlyUsingBlocks = ACE
         return setValueResult
 
       @redraw()
@@ -1678,9 +1688,70 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
         success: true
       }
 
+    # ## performBothAnimation ##
+    _performBothAnimation: ->
+      if @currentlyAnimating or @currentlyUsingBlocks == BOTH then return
+      else @currentlyAnimating = true; @currentlyUsingBlocks = BOTH
+
+      @redraw()
+
+      # We need to find out some properties of dimensions
+      # in the ace editor. So we will need to display the ace editor momentarily off-screen.
+      @ace.setValue @getValue(), -1
+      @aceEl.style.display = 'block'
+      @aceEl.style.left = "450px"
+      @aceEl.style.zIndex = 4
+
+      @palette.style.width = "200px"
+      @main.style.left = "200px"
+
+      @currentlyAnimating = false
+
+      return {
+        success: true
+      }
+
+    # ## performOneAnimation ##
+    _performOneAnimation: ->
+      if @currentlyAnimating or @currentlyUsingBlocks == ICE then return
+      else @currentlyAnimating = true; @currentlyUsingBlocks = ICE
+
+      @aceEl.style.display = 'none'
+      @aceEl.style.left = "0px"
+
+      @palette.style.width = "#{PALETTE_WIDTH}px"
+      @main.style.left = "#{PALETTE_WIDTH}px"
+
+      @currentlyAnimating = false
+
+      return {
+        success: true
+      }
+
+    _performUpdateFromText: ->
+      @currentlyAnimating = true
+      setValueResult = @setValue @ace.getValue()[...-1]
+      if setValueResult.success == false
+        @main.style.backgroundColor = "#FFCCCC"
+      else
+        @main.style.backgroundColor = "#EEEEEE"
+      @currentlyAnimating = false
+
     toggleBlocks: ->
-      if @currentlyUsingBlocks then @_performMeltAnimation()
-      else @_performFreezeAnimation()
+      if @currentlyUsingBlocks == ICE then @_performMeltAnimation()
+      else if @currentlyUsingBlocks == ACE then @_performFreezeAnimation()
+      # TODO(dkogan): Implement animations from BOTH
+
+    toggleBoth: ->
+      if @currentlyUsingBlocks == ICE then @_performBothAnimation()
+      else if @currentlyUsingBlocks == BOTH then @_performOneAnimation()
+
+    notifyChange: ->
+      if @currentlyUsingBlocks == BOTH and @currentlyAnimating == false
+        newText = @ace.getValue()[...-1]
+        if newText != @lastText
+          @_performUpdateFromText(newText)
+        @lastText = newText
 
     setEmphasizeMarkedLines: (value) ->
       @emphasizeMarkedLines = value

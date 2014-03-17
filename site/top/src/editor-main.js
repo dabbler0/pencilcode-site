@@ -1203,9 +1203,18 @@ function loadFileIntoPosition(position, filename, isdir, forcenet, cb) {
         view.setPaneEditorText(pane, m.data, filename);
 
         var id = uniqueToggleButtonId();
-        view.setPaneTitleExtra(pane, '<button id="' + id + '">toggle</button>');
+        var id2 = uniqueToggleButtonId();
+        view.setPaneTitleExtra(pane, '<button id="' + id + '">toggle</button> <button id="' + id2 + '">both</button>');
+
         document.getElementById(id).addEventListener('click', function() {
           var toggle = view.togglePaneEditorBlocks(pane);
+          if (!toggle.success) {
+            view.markPaneEditorLine(pane, toggle.error.location.first_line+1, 'debugerror');
+          }
+        });
+
+        document.getElementById(id2).addEventListener('click', function() {
+          var toggle = view.togglePaneEditorBoth(pane);
           if (!toggle.success) {
             view.markPaneEditorLine(pane, toggle.error.location.first_line+1, 'debugerror');
           }

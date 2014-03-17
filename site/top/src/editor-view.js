@@ -77,6 +77,7 @@ window.pencilcode.view = {
   setPaneEditorText: setPaneEditorText,
   getPaneEditorText: getPaneEditorText,
   togglePaneEditorBlocks: togglePaneEditorBlocks,
+  togglePaneEditorBoth: togglePaneEditorBoth,
   markPaneEditorLine: markPaneEditorLine,
   clearPaneEditorLine: clearPaneEditorLine,
   clearPaneEditorMarks: clearPaneEditorMarks,
@@ -1358,6 +1359,12 @@ function togglePaneEditorBlocks(pane) {
   return paneState.iceEditor.toggleBlocks();
 }
 
+function togglePaneEditorBoth(pane) {
+  console.log(state.pane);
+  var paneState = state.pane[pane];
+  return paneState.iceEditor.toggleBoth();
+}
+
 // Initializes an (ACE) editor into a pane, using the given text and the
 // given filename.
 // @param pane the id of a pane - alpha, bravo or charlie.
@@ -1421,6 +1428,10 @@ function setPaneEditorText(pane, text, filename) {
     if (!paneState.dirtied) {
       fireEvent('dirty', [pane]);
     }
+    // In case ice editor is dynamically updating.
+    var pos = editor.getCursorPosition();
+    paneState.iceEditor.notifyChange();
+    editor.moveCursorToPosition(pos);
   });
   if (long) {
     editor.gotoLine(0);
@@ -1691,4 +1702,3 @@ $('#owner,#filename,#folder').tooltipster();
 return window.pencilcode.view;
 
 });
-
