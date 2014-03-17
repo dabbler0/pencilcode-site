@@ -1692,8 +1692,9 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
       @aceEl.style.left = "450px"
       @aceEl.style.zIndex = 4
 
-      @palette.style.width = "200px"
-      @main.style.left = "200px"
+      PALETTE_WIDTH = 200
+      @palette.style.width = "#{PALETTE_WIDTH}px"
+      @main.style.left = "#{PALETTE_WIDTH}px"
 
       @currentlyAnimating = false
 
@@ -1709,6 +1710,7 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
       @aceEl.style.display = 'none'
       @aceEl.style.left = "0px"
 
+      PALETTE_WIDTH = 300
       @palette.style.width = "#{PALETTE_WIDTH}px"
       @main.style.left = "#{PALETTE_WIDTH}px"
 
