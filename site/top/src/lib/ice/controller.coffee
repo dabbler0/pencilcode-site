@@ -193,7 +193,17 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
 
       # The main context will be used for draw.js's text measurements (this is a bit of a hack)
       draw._setCTX @mainCtx
-    
+      
+      @lastHoveredLine = -1
+      track.addEventListener 'mousemove', (event) =>
+        if @onLineHover?
+          height = event.offsetY
+          line = @getHoveredLine height
+          if line isnt @lastHoveredLine
+            @onLineHover {
+              line: line
+            }
+            @lastHoveredLine = line
       # Resize the canvases when the window resizes
       window.addEventListener 'resize', @resize = =>
         @main.height = @el.offsetHeight
@@ -1688,4 +1698,13 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
         if head.type is 'blockStart' then head.block.lineMarked = false
         head = head.next
 
+    getHoveredLine: (offsetTop) ->
+      runningHeight = 0
+      for line in [@tree.view.lineStart..@tree.view.lineEnd]
+        runningHeight += @tree.view.dimensions[line].height
+        if offsetTop < runningHeight
+          return line
+
+      return @tree.view.lineEnd
+    
   return exports

@@ -505,7 +505,6 @@ define ['ice-draw'], (draw) ->
     drawPath: (ctx, emphasis) ->
       if @path._points.length is 0 then debugger
 
-      console.log 'emphasis is', emphasis
       if emphasis and not @block.lineMarked then ctx.globalAlpha = FADED_OPACITY
       @path.draw ctx
       if emphasis then ctx.globalAlpha = 1

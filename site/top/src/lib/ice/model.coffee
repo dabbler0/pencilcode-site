@@ -405,7 +405,7 @@ define ['ice-view'], (view) ->
 
         head = head.next
 
-      while head.type is 'cursor' then head = head.next
+      while head.type in ['cursor', 'segmentStart', 'segmentEnd'] then head = head.next
       if head?.type is 'blockStart' then stack.push head.block
 
       return stack[stack.length - 1]
