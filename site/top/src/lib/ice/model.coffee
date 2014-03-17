@@ -12,7 +12,7 @@ define ['ice-view'], (view) ->
   exports.cloneTokens = cloneTokens = (start, end) ->
     head = start
     cursor = beginning = new Token()
-    
+
     # This is "while true" to simulate a kind of
     # do-while; we want to actually perform this action
     # the first time our condition is true but no more.
@@ -44,19 +44,19 @@ define ['ice-view'], (view) ->
           head = head.segment.end
         else
           unless head.type is 'cursorToken' then cursor = cursor.append head.clone()
-      
+
       # Here's the condition we talked about earlier
       if head is end then break
 
       head = head.next
-    
+
     clonedStart = beginning.next
     clonedEnd = cursor
 
     beginning.remove()
 
     return [clonedStart, clonedEnd]
-  
+
   lengthBetween = (start, end) ->
     head = start; len = 1
     until head is end
@@ -87,25 +87,25 @@ define ['ice-view'], (view) ->
       @selected = false # Are we the selected block?
 
       @view = new view.BlockView this
-    
+
     # ## Clone ##
     # Cloning produces a new Block entirely independent
     # of this one (there are no linked-list pointers in common).
     clone: ->
       clone = new Block @precedence, @color
-      
+
       unless @start.next is @end
         [clonedStart, clonedEnd] = cloneTokens @start.next, @end.prev
-        
+
         # Splice the cloned string of tokens into
         # the cloned start and end
         clone.start.append clonedStart
         clonedEnd.append clone.end
-      
+
       return clone
-    
+
     length: -> lengthBetween @start, @end
-      
+
     # ## inSocket ##
     # Is this block in a Socket? This function is mainly used
     # by the View to determine whether a block needs tabs or not,
@@ -114,7 +114,7 @@ define ['ice-view'], (view) ->
       head = @start.prev
       while head? and head.type is 'segmentStart' then head = head.prev
       return head? and head.type is 'socketStart'
-    
+
     # ## moveTo ##
     # Splice this block out and place it somewhere else.
     # This will also eliminate any empty lines left behind, and any empty Segments.
@@ -141,7 +141,7 @@ define ['ice-view'], (view) ->
       if @start.prev? then @start.prev.next = @end.next
       if @end.next? then @end.next.prev = @start.prev
       @start.prev = @end.next = null
-      
+
       # Splice ourselves into the requested parent
       if parent?
         @end.next = parent.next
@@ -161,7 +161,7 @@ define ['ice-view'], (view) ->
       else if @currentlyParenWrapped
         @start.next.remove(); @end.prev.remove()
         @currentlyParenWrapped = false
-    
+
     # ## checkParenWrap ##
     # Wrap ourselves or unwrap in parentheses if necessary, otherwise do nothing.
     checkParenWrap: ->
@@ -176,7 +176,7 @@ define ['ice-view'], (view) ->
       else if @currentlyParenWrapped
         @start.next.remove(); @end.prev.remove()
         @currentlyParenWrapped = false
-    
+
     # ## find ##
     # This one is mainly used for hit-testing during drag-and-drop by the Controller.
     # It finds the first child fitting f(x) that does not have a child who fits f(x).
@@ -193,10 +193,10 @@ define ['ice-view'], (view) ->
 
       # Maybe the _we_ are the first child with no fitting children
       if f this then return this
-      
+
       # We found no results, so return null.
       else return null
-    
+
     # ## stringify ##
     # This one is mainly used for debugging. The string representation ("compiled code")
     # for anything between our start and end tokens. This is computed by stringifying
@@ -216,7 +216,7 @@ define ['ice-view'], (view) ->
       @type = 'indent'
 
       @start.next = @end; @end.prev = @start
-      
+
       @view = new view.IndentView this
 
     # ## clone ##
@@ -224,15 +224,15 @@ define ['ice-view'], (view) ->
     # is identical, but shares no linked-list pointers with us.
     clone: ->
       clone = new Indent @depth
-      
+
       unless @start.next is @end
         [clonedStart, clonedEnd] = cloneTokens @start.next, @end.prev
-        
+
         # Splice the cloned string of tokens into
         # the cloned start and end
         clone.start.append clonedStart
         clonedEnd.append clone.end
-      
+
       return clone
 
     # ## find ##
@@ -249,13 +249,13 @@ define ['ice-view'], (view) ->
         else if head.type is 'indentStart' and f(head.indent) then return head.indent.find f
         else if head.type is 'socketStart' and f(head.socket) then return head.socket.find f
         head = head.next
-      
+
       # Could _we_ be the first fitting element with no fitting children?
       if f this then return this
 
       # Couldn't find any, so return null.
       else return null
-    
+
     # ## stringify ##
     # This one is mainly used for debugging. Like Block.stringify, computes
     # the compiled code for everything between the two end tokens, by stringifying
@@ -276,9 +276,9 @@ define ['ice-view'], (view) ->
       @type = 'segment'
 
       @start.next = @end; @end.prev = @start
-      
+
       @view = new view.SegmentView this
-    
+
     length: -> lengthBetween @start, @end
 
     # ## clone ##
@@ -289,14 +289,14 @@ define ['ice-view'], (view) ->
 
       unless @start.next is @end
         [clonedStart, clonedEnd] = cloneTokens @start.next, @end.prev
-        
+
         # Splice the cloned string of tokens into
         # the cloned start and end
         clone.start.append clonedStart
         clonedEnd.append clone.end
-      
+
       return clone
-    
+
     # ## remove ##
     # This method is unique to Segments because you would never want to call it
     # on any other kind of markup. This removes the start and end tokens, thus leaving
@@ -333,7 +333,7 @@ define ['ice-view'], (view) ->
       if @start.prev? then @start.prev.next = @end.next
       if @end.next? then @end.next.prev = @start.prev
       @start.prev = @end.next = null
-      
+
       # Splice ourselves into the requested parent
       if parent?
         @end.next = parent.next
@@ -360,7 +360,7 @@ define ['ice-view'], (view) ->
       # Couldn't find any, so we are the innermost child fitting f()
       if f(this) then return this
       else return null
-    
+
     # ## stringify ##
     # This one is actually called often from the Controller, since
     # Segments serve as the root elements of every tree. As with Blocks and Indents,
@@ -369,7 +369,7 @@ define ['ice-view'], (view) ->
     stringify: -> @start.stringify
       indent: ''
       stopToken: @end
-    
+
     # ## getTokenAtLocation ##
     # Get the token at serialized location (location), produced
     # with Token::getSerializedLocation()
@@ -404,9 +404,9 @@ define ['ice-view'], (view) ->
     constructor: (content, @precedence = 0) ->
       @start = new SocketStartToken this
       @end = new SocketEndToken this
-      
+
       if content? and content.start?
-        
+
         @start.next = content.start
         content.start.prev = @start
 
@@ -432,13 +432,13 @@ define ['ice-view'], (view) ->
       @handwritten = false
 
       @view = new view.SocketView this
-    
+
     # ## clone ##
     # Cloning produces an identical Socket with no shared linked-list pointers.
     # To produce this clone, we need only delegate to our content block, because
     # there *may only be one*.
     clone: -> if @content()? then new Socket @content().clone() else new Socket()
-    
+
     # ## content ##
     # Get the content block of this Socket
     content: ->
@@ -474,14 +474,14 @@ define ['ice-view'], (view) ->
     stringify: -> @start.stringify
       indent: ''
       stopToken: @end
-   
+
   # # Token
   # This is the class from which all ICE Editor tokens descend.
   # It knows basic linked-list operations.
   exports.Token = class Token
     constructor: ->
       @prev = @next = null
-    
+
     # ## append ##
     # Splice the linked list starting at (token)
     # to the end of this token. This disconnects us from
@@ -490,7 +490,7 @@ define ['ice-view'], (view) ->
     append: (token) ->
       token.prev = this
       @next = token
-    
+
     # ## insert ##
     # Insert signle token (token) into this linked list
     # right after us. This retains our linked list order.
@@ -501,7 +501,7 @@ define ['ice-view'], (view) ->
       token.prev = this
       @next = token
       return @next
-    
+
     # ## insertBefore ##
     # Insert (token) in this linked list before us, as with insert.
     insertBefore: (token) ->
@@ -513,7 +513,7 @@ define ['ice-view'], (view) ->
       @prev = token
 
       return @prev
-    
+
     # ## remove ##
     # Splice us out of the linked list
     remove: ->
@@ -525,7 +525,7 @@ define ['ice-view'], (view) ->
     # Converting a Token to a string gets you the compilation of this
     # and every token after it. 
     stringify: (state) -> if @next? and @next isnt state.stopToken then @next.stringify(state) else ''
-    
+
     # ## getSerializedLocation ##
     # Get dead data representing this token's position in the tree.
     getSerializedLocation: ->
@@ -635,5 +635,5 @@ define ['ice-view'], (view) ->
 
     stringify: (state) ->
       '\n' + state.indent + if @next and @next isnt state.stopToken then @next.stringify(state) else ''
-  
+
   return exports
