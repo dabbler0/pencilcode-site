@@ -587,8 +587,9 @@ define ['ice-draw'], (draw) ->
     computeChildren: (line) ->
       super
 
-      # Skip over the leading newline required by every indent
-      @lineStart += 1
+      # Check if this Indent starts with a leading newline. If so, skip over it.
+      if @.children[0].lineStart == @lineStart + 1
+        @lineStart += 1
 
       return @lineEnd
     
