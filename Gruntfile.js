@@ -259,6 +259,6 @@ module.exports = function(grunt) {
   grunt.registerTask('debug', ['concat', 'devtest']);
   // default target: compile editor code and uglify turtlebits.js, and test it.
   grunt.registerTask('default', ['coffee', 'requirejs', 'replace', 'uglify', 'test']);
-  grunt.registerTask('buildonly', ['coffee', 'requirejs', 'replace']);
+  grunt.registerTask('buildonly', ['coffee', 'requirejs', 'replace', 'uglify']);
 };
 

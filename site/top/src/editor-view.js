@@ -1330,6 +1330,11 @@ function fixRepeatedCtrlFCommand(editor) {
   }])
 }
 
+// Builds palette to pass to the ICE editor constructor.
+function buildPalette() {
+    return [];
+}
+
 // Initializes an (ACE) editor into a pane, using the given text and the
 // given filename.
 // @param pane the id of a pane - alpha, bravo or charlie.
@@ -1344,8 +1349,10 @@ function setPaneEditorText(pane, text, filename) {
   paneState.mimeType = mimeForFilename(filename);
   paneState.cleanText = text;
   paneState.dirtied = false;
+  var palette = buildPalette(); 
   $('#' + pane).html('<div id="' + id + '" class="editor"></div>');
-  var iceEditor = paneState.iceEditor = new ice.Editor(document.getElementById(id), []);
+    
+    var iceEditor = paneState.iceEditor = new ice.Editor(document.getElementById(id), buildPalette());
   window.latestIceEditor = iceEditor; // DEBUGGING
   var editor = paneState.editor = iceEditor.ace;
   fixRepeatedCtrlFCommand(editor);
