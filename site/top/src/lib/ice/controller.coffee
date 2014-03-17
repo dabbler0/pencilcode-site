@@ -97,12 +97,14 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
       @ace.setShowPrintMargin false
       @ace.setFontSize FONT_SIZE
 
-      @el = document.createElement 'div'; @el.className = 'ice_editor'
+      @el = document.createElement 'div'; @el.className = 'ice_editor'; @el.tabIndex = 0
       wrapper.appendChild @el
 
 
       # ## Field declaration ##
       # (useful to have all in one place)
+
+      @emphasizeMarkedLines = false
 
       # If we did not recieve palette blocks in the constructor, we have no palette.
       @paletteBlocks ?= []
@@ -226,7 +228,7 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
         @tree.view.compute()
 
         # Draw it on the main context
-        @tree.view.draw @mainCtx
+        @tree.view.draw @mainCtx, @emphasizeMarkedLines
 
         # Alert the lasso segment, if it exists, to recompute its bounds
         if @lassoSegment?
@@ -331,6 +333,8 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
       # ## addMicroUndoOperation ##
       # Bureaucracy wrapper for pushing to the undo stack.
       addMicroUndoOperation = (operation) =>
+        @emphasizeMarkedLines = false
+
         # For clarity, we ensure that the operation
         # is of one of the known types.
         unless operation?.type in [
@@ -535,6 +539,8 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
           @redraw()
 
       moveCursorTo = (token) =>
+        @emphasizeMarkedLines = false
+
         # Splice out
         @cursor.remove()
 
@@ -560,6 +566,8 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
         scrollCursorIntoView()
 
       moveCursorBefore = (token) =>
+        @emphasizeMarkedLines = false
+
         # Splice out
         @cursor.remove()
 
@@ -720,8 +728,8 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
 
               @redraw()
               event.preventDefault(); return false
-          when 38 then setTextInputFocus null; @hiddenInput.blur(); moveCursorUp(); @redraw()
-          when 40 then setTextInputFocus null; @hiddenInput.blur(); moveCursorDown(); @redraw()
+          when 38 then setTextInputFocus null; @hiddenInput.blur(); moveCursorUp(); @el.focus(); @redraw()
+          when 40 then setTextInputFocus null; @hiddenInput.blur(); moveCursorDown(); @el.focus(); @redraw()
           when 37 then if @hiddenInput.selectionStart is @hiddenInput.selectionEnd and @hiddenInput.selectionStart is 0
             # Pressing the left-arrow at the leftmost end of a socket brings us to the previous socket
             head = @focus.start
@@ -750,7 +758,7 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
 
       # Bind keyboard shortcut events to the document
 
-      document.body.addEventListener 'keydown', (event) =>
+      @el.addEventListener 'keydown', (event) =>
         # Keyboard shortcuts don't apply if they were executed in a text input area
         if event.target.tagName in ['INPUT', 'TEXTAREA'] then return
 
@@ -834,6 +842,7 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
           when event.layerX then new draw.Point event.layerX - PALETTE_WIDTH, event.layerY + @scrollOffset.y
 
       performNormalMouseDown = (point, isTouchEvent) =>
+        @emphasizeMarkedLines = false
 
         # See what we picked up
         @ephemeralSelection = hitTestFloating(point) ?
@@ -1714,8 +1723,20 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
       if @currentlyUsingBlocks == ICE then @_performBothAnimation()
       else if @currentlyUsingBlocks == BOTH then @_performOneAnimation()
 
+    setEmphasizeMarkedLines: (value) ->
+      @emphasizeMarkedLines = value
+
     markLine: (line) ->
-      @tree.getBlockOnLine(line).lineMarked = true
+      block = @tree.getBlockOnLine(line)
+      unless block? then return
+      
+      block.lineMarked = true
       @redraw()
+
+    unmarkLines: ->
+      head = @tree.start
+      until head is @tree.end
+        if head.type is 'blockStart' then head.block.lineMarked = false
+        head = head.next
 
   return exports
