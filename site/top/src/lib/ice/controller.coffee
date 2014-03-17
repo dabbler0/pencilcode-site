@@ -203,6 +203,7 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
         drag.width = @el.offsetWidth - PALETTE_WIDTH
 
         @redraw()
+        @redrawPalette()
 
       # ## Convenience Functions ##
       # General-purpose methods that call the view (rendering functions)
