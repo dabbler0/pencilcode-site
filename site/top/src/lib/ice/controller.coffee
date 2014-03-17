@@ -1476,6 +1476,7 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
       @aceEl.style.top = -9999
       @aceEl.style.left = -9999
       @aceEl.style.display = 'block'
+      @aceEl.style.opacity = 0
 
       # We must wait for the Ace editor to render before we continue.
       # Ace actually takes some time with webworkers to determine some things like line height,
@@ -1553,6 +1554,7 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
             @aceEl.style.left = 0
             @aceEl.style.display = 'block'
             @aceEl.style.height = '100%'
+            @aceEl.style.opacity = 1
 
             # We need to trigger an ace resize event by hand,
             # because ace still thinks that it is hidden (0x0).
