@@ -70,10 +70,12 @@ window.pencilcode.view = {
   // Sets up the text-editor in the view.
   paneid: paneid,
   panepos: panepos,
-  setPaneTitle: function(pane, html) { $('#' + pane + 'title').html(html); },
+  setPaneTitle: function(pane, html) { $('#' + pane + 'title_main').html(html); },
+  setPaneTitleExtra: function(pane, html) { $('#' + pane + 'title_extra').html(html); },
   clearPane: clearPane,
   setPaneEditorText: setPaneEditorText,
   getPaneEditorText: getPaneEditorText,
+  togglePaneEditorBlocks: togglePaneEditorBlocks,
   markPaneEditorLine: markPaneEditorLine,
   clearPaneEditorLine: clearPaneEditorLine,
   clearPaneEditorMarks: clearPaneEditorMarks,
@@ -1210,7 +1212,7 @@ function clearPane(pane, loading) {
   paneState.running = false;
   $('#' + pane).html(loading ? '<div class="vcenter">' +
       '<div class="hcenter"><div class="loading"></div></div></div>' : '');
-  $('#' + pane + 'title').html('');
+  $('#' + pane + 'title_main').html('');
 }
 
 function modeForMimeType(mimeType) {
@@ -1257,7 +1259,7 @@ function updatePaneTitle(pane) {
   }
   var shortened = paneState.filename || '';
   shortened = shortened.replace(/^.*\//, '');
-  $('#' + pane + 'title').html(prefix + shortened + suffix);
+  $('#' + pane + 'title_main').html(prefix + shortened + suffix);
 }
 
 function normalizeCarriageReturns(text) {
@@ -1349,6 +1351,12 @@ function buildPalette() {
     return blocks;
 }
 
+function togglePaneEditorBlocks(pane) {
+  console.log(state.pane);
+  var paneState = state.pane[pane];
+  return paneState.iceEditor.toggleBlocks();
+}
+
 // Initializes an (ACE) editor into a pane, using the given text and the
 // given filename.
 // @param pane the id of a pane - alpha, bravo or charlie.
@@ -1363,10 +1371,10 @@ function setPaneEditorText(pane, text, filename) {
   paneState.mimeType = mimeForFilename(filename);
   paneState.cleanText = text;
   paneState.dirtied = false;
-  var palette = buildPalette(); 
   $('#' + pane).html('<div id="' + id + '" class="editor"></div>');
-    var iceEditor = paneState.iceEditor = new ice.Editor(document.getElementById(id), buildPalette());
-  window.latestIceEditor = iceEditor; // DEBUGGING
+  var palette = buildPalette(); 
+  var iceEditor = paneState.iceEditor = new ice.Editor(document.getElementById(id), buildPalette());
+  //window.latestIceEditor = iceEditor; // DEBUGGING
   var editor = paneState.editor = iceEditor.ace;
   fixRepeatedCtrlFCommand(editor);
   updatePaneTitle(pane);

@@ -1200,6 +1200,16 @@ function loadFileIntoPosition(position, filename, isdir, forcenet, cb) {
         mpp.isdir = false;
         mpp.data = m;
         view.setPaneEditorText(pane, m.data, filename);
+
+        var id = uniqueToggleButtonId();
+        view.setPaneTitleExtra(pane, '<button id="' + id + '">toggle</button>');
+        document.getElementById(id).addEventListener('click', function() {
+          var toggle = view.togglePaneEditorBlocks(pane);
+          if (!toggle.success) {
+            view.markPaneEditorLine(pane, toggle.error.location.first_line+1, 'debugerror');
+          }
+        });
+
         noteIfUnsaved(posofpane(pane));
         updateTopControls(false);
         cb && cb();
@@ -1207,6 +1217,12 @@ function loadFileIntoPosition(position, filename, isdir, forcenet, cb) {
     });
   }
 };
+
+var latestToggleId = 0;
+
+function uniqueToggleButtonId() {
+  return 'toggle_button_ ' + (latestToggleId += 1);
+}
 
 function sortByDate(a, b) {
   return b.mtime - a.mtime;

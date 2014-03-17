@@ -51,14 +51,23 @@ htmlEscape(location.pathname.replace(/^\/(?:[^\/]*\/)?|\/$/g, '')),
 })();
 </script></nobr></td>
 <td id="topright"><nobr id="buttonbar"></nobr></td></tr></table>
-<div id="alphatitle" class="back panetitle"></div>
+<div id="alphatitle" class="back panetitle">
+  <div id="alphatitle_main" class="maintitle"></div>
+  <div id="alphatitle_extra" class="extratitle"></div>
+</div>
 <div id="alpha" class="back pane"></div>
-<div id="bravotitle" class="left panetitle" style="width:100%"></div>
-<div id="bravo" class="left pane" style="width:100%"
-><div class="vcenter"><div class="hcenter"
+<div id="bravotitle" class="left panetitle">
+  <div id="bravotitle_main" class="maintitle"></div>
+  <div id="bravotitle_extra" class="extratitle"></div>
+</div>
+<div id="bravo" class="left pane"></div>
+<div class="vcenter"><div class="hcenter"
 ><div class="loading"></div></div></div></div>
-<div id="charlietitle" class="right panetitle" style="left:100%"></div>
-<div id="charlie" class="right pane" style="left:100%"></div>
+<div id="charlietitle" class="right panetitle">
+  <div id="charlietitle_main" class="maintitle"></div>
+  <div id="charlietitle_extra" class="extratitle"></div>
+</div>
+<div id="charlie" class="right pane"></div>
 </div><!-- end clip -->
 <script src="/lib/ace/ace.js"></script> <!-- local URL for same-origin -->
 <script src="/lib/coffee-script.js"></script> <!-- local URL for same-origin -->
