@@ -2,8 +2,8 @@
 // VIEW SUPPORT
 ///////////////////////////////////////////////////////////////////////////
 
-define(['jquery', 'tooltipster', 'see', 'ice', 'ZeroClipboard'],
-function($, tooltipster, see, ice, ZeroClipboard) {
+define(['jquery', 'tooltipster', 'see', 'ice', 'draw-protractor', 'ZeroClipboard'],
+function($, tooltipster, see, ice, drawProtractor, ZeroClipboard) {
 
 // The view has three panes, #left, #right, and #back (the offscreen pane).
 //
@@ -70,10 +70,14 @@ window.pencilcode.view = {
   // Sets up the text-editor in the view.
   paneid: paneid,
   panepos: panepos,
-  setPaneTitle: function(pane, html) { $('#' + pane + 'title').html(html); },
+  setPaneTitle: function(pane, html) { $('#' + pane + 'title_main').html(html); },
+  setPaneTitleExtra: function(pane, html) { $('#' + pane + 'title_extra').html(html); },
+  setPaneEmphasizeMarkedBlocks: setPaneEmphasizeMarkedBlocks,
   clearPane: clearPane,
   setPaneEditorText: setPaneEditorText,
   getPaneEditorText: getPaneEditorText,
+  togglePaneEditorBlocks: togglePaneEditorBlocks,
+  togglePaneEditorBoth: togglePaneEditorBoth,
   markPaneEditorLine: markPaneEditorLine,
   clearPaneEditorLine: clearPaneEditorLine,
   clearPaneEditorMarks: clearPaneEditorMarks,
@@ -1210,7 +1214,7 @@ function clearPane(pane, loading) {
   paneState.running = false;
   $('#' + pane).html(loading ? '<div class="vcenter">' +
       '<div class="hcenter"><div class="loading"></div></div></div>' : '');
-  $('#' + pane + 'title').html('');
+  $('#' + pane + 'title_main').html('');
 }
 
 function modeForMimeType(mimeType) {
@@ -1257,7 +1261,7 @@ function updatePaneTitle(pane) {
   }
   var shortened = paneState.filename || '';
   shortened = shortened.replace(/^.*\//, '');
-  $('#' + pane + 'title').html(prefix + shortened + suffix);
+  $('#' + pane + 'title_main').html(prefix + shortened + suffix);
 }
 
 function normalizeCarriageReturns(text) {
@@ -1349,6 +1353,18 @@ function buildPalette() {
     return blocks;
 }
 
+function togglePaneEditorBlocks(pane) {
+  console.log(state.pane);
+  var paneState = state.pane[pane];
+  return paneState.iceEditor.toggleBlocks();
+}
+
+function togglePaneEditorBoth(pane) {
+  console.log(state.pane);
+  var paneState = state.pane[pane];
+  return paneState.iceEditor.toggleBoth();
+}
+
 // Initializes an (ACE) editor into a pane, using the given text and the
 // given filename.
 // @param pane the id of a pane - alpha, bravo or charlie.
@@ -1363,10 +1379,16 @@ function setPaneEditorText(pane, text, filename) {
   paneState.mimeType = mimeForFilename(filename);
   paneState.cleanText = text;
   paneState.dirtied = false;
-  var palette = buildPalette(); 
   $('#' + pane).html('<div id="' + id + '" class="editor"></div>');
-    var iceEditor = paneState.iceEditor = new ice.Editor(document.getElementById(id), buildPalette());
-  window.latestIceEditor = iceEditor; // DEBUGGING
+  var palette = buildPalette(); 
+  var iceEditor = paneState.iceEditor = new ice.Editor(document.getElementById(id), buildPalette());
+  iceEditor.onLineHover = function(ev) {
+    state.callbacks['icehover'] && state.callbacks['icehover'](pane, ev);
+  }
+  iceEditor.onChange = function() {
+    fireEvent('dirty', [pane]);
+  }
+  //window.latestIceEditor = iceEditor; // DEBUGGING
   var editor = paneState.editor = iceEditor.ace;
   fixRepeatedCtrlFCommand(editor);
   updatePaneTitle(pane);
@@ -1406,6 +1428,10 @@ function setPaneEditorText(pane, text, filename) {
     if (!paneState.dirtied) {
       fireEvent('dirty', [pane]);
     }
+    // In case ice editor is dynamically updating.
+    var pos = editor.getCursorPosition();
+    paneState.iceEditor.notifyChange();
+    editor.moveCursorToPosition(pos);
   });
   if (long) {
     editor.gotoLine(0);
@@ -1501,6 +1527,14 @@ function getPaneEditorText(pane) {
   return {text: text, mime: paneState.mimeType };
 }
 
+function setPaneEmphasizeMarkedBlocks(pane) {
+  var paneState = state.pane[pane];
+  if (!paneState.iceEditor) return;
+  else {
+    paneState.iceEditor.setEmphasizeMarkedLines(true);
+  }
+}
+
 // Marks a line of the editor using the given CSS class
 // (using 1-based line numbering).
 // Marks are cumulative.  To clear all marks of a given class,
@@ -1519,6 +1553,11 @@ function getPaneEditorText(pane) {
 function markPaneEditorLine(pane, line, markclass) {
   var paneState = state.pane[pane];
   if (!paneState.editor) {
+    return;
+  }
+  if (paneState.iceEditor.currentlyUsingBlocks) {
+    paneState.iceEditor.unmarkLines();
+    paneState.iceEditor.markLine(line - 1);
     return;
   }
   // ACE uses zero-based line numbering.
@@ -1663,4 +1702,3 @@ $('#owner,#filename,#folder').tooltipster();
 return window.pencilcode.view;
 
 });
-

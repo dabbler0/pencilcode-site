@@ -411,6 +411,24 @@ view.on('entergutter', function(pane, lineno) {
   displayProtractorForRecord(lineRecord[lineno]);
 });
 
+view.on('icehover', function(pane, ev) {
+  view.hideProtractor(view.paneid('right'));
+  var lineno = ev.line + 1;
+  console.log('hi', pane, view.paneid('left'), lineno);
+  if (pane != view.paneid('left')) return;
+  if (!(lineno in lineRecord)) return;
+  view.markPaneEditorLine(view.paneid('left'), lineno, 'debugfocus');
+  displayProtractorForRecord(lineRecord[lineno]);
+});
+
+view.on('entergutter', function(pane, lineno) {
+  if (pane != view.paneid('left')) return;
+  if (!(lineno in lineRecord)) return;
+  view.clearPaneEditorMarks(view.paneid('left'), 'debugfocus');
+  view.markPaneEditorLine(view.paneid('left'), lineno, 'debugfocus');
+  displayProtractorForRecord(lineRecord[lineno]);
+});
+
 view.on('leavegutter', function(pane, lineno) {
   view.clearPaneEditorMarks(view.paneid('left'), 'debugfocus');
   view.hideProtractor(view.paneid('right'));

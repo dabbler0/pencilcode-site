@@ -9,7 +9,7 @@ define ['ice-draw'], (draw) ->
   PADDING = 5
   INDENT_SPACING = 15
   TOUNGE_HEIGHT = 10
-  FONT_HEIGHT = 15
+  FONT_HEIGHT = 24
   EMPTY_SOCKET_HEIGHT = FONT_HEIGHT + PADDING * 2
   EMPTY_SOCKET_WIDTH = 20
   EMPTY_INDENT_HEIGHT = FONT_HEIGHT + PADDING * 2
@@ -20,6 +20,7 @@ define ['ice-draw'], (draw) ->
   TAB_HEIGHT = 5
   TAB_OFFSET = 10
   SOCKET_DROP_PADDING = 3
+  FADED_OPACITY = 0.5
   
   exports = {}
 
@@ -84,7 +85,7 @@ define ['ice-draw'], (draw) ->
 
       # Linked-list loop through inner tokens
       head = @block.start.next
-      while head isnt @block.end
+      while head isnt @block.end and head != null
         switch head.type
           when 'blockStart'
             # Ask this child to compute its children (thus determining its ending line, as well)
@@ -215,9 +216,9 @@ define ['ice-draw'], (draw) ->
     
 
     # ## FIFTH PASS: draw ##
-    drawPath: (ctx) ->
+    drawPath: (ctx, emphasis) ->
       # Event propagate
-      for child in @children then child.drawPath ctx
+      for child in @children then child.drawPath ctx, emphasis
 
     # ## SIXTH Pass: draw cursor ##
     drawCursor: (ctx) ->
@@ -250,8 +251,8 @@ define ['ice-draw'], (draw) ->
         ctx.fill()
     
     # ### Convenience function: full draw ###
-    draw: (ctx) ->
-      @drawPath ctx
+    draw: (ctx, emphasis) ->
+      @drawPath ctx, emphasis
       @drawCursor ctx
 
     # ###Convenience function: computeBoundingBoxes. ##
@@ -501,9 +502,12 @@ define ['ice-draw'], (draw) ->
       
     # ## drawPath ##
     # This just executes that path we constructed in computePath
-    drawPath: (ctx) ->
+    drawPath: (ctx, emphasis) ->
       if @path._points.length is 0 then debugger
+
+      if emphasis and not @block.lineMarked then ctx.globalAlpha = FADED_OPACITY
       @path.draw ctx
+      if emphasis then ctx.globalAlpha = 1
 
       super
 
@@ -542,7 +546,7 @@ define ['ice-draw'], (draw) ->
     
     computePath: -> # Do nothing
 
-    drawPath: (ctx) ->
+    drawPath: (ctx, emphasis) ->
       @textElement.draw ctx
 
     translate: (point) ->
@@ -583,8 +587,9 @@ define ['ice-draw'], (draw) ->
     computeChildren: (line) ->
       super
 
-      # Skip over the leading newline required by every indent
-      @lineStart += 1
+      # Check if this Indent starts with a leading newline. If so, skip over it.
+      if @.children[0].lineStart == @lineStart + 1
+        @lineStart += 1
 
       return @lineEnd
     
@@ -708,7 +713,7 @@ define ['ice-draw'], (draw) ->
     # If we are empty or contain text,
     # then we must draw the white rectangle.
     # Otherwise, simply delegate.
-    drawPath: (ctx) ->
+    drawPath: (ctx, emphasis) ->
       if not @block.content()? or @block.content().type is 'text'
         # If we are empty, then draw our unit rectangle. If we have text inside, then draw the wrapping rectangle.
         @bounds[@lineStart].stroke ctx, '#000'
@@ -757,7 +762,7 @@ define ['ice-draw'], (draw) ->
     
     # ## drawPath ##
     # We must override this to provide a drop area
-    drawPath: ->
+    drawPath: (ctx, emphasis) ->
       @dropArea = new draw.Rectangle @bounds[@lineStart].x,
         @bounds[@lineStart].y - 5,
         Math.max(@bounds[@lineStart].width,MIN_SEGMENT_DROP_AREA_WIDTH),

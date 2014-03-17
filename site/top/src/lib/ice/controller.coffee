@@ -8,15 +8,18 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
 
   PADDING = 5
   INDENT_SPACES = 2
-  INPUT_LINE_HEIGHT = 15
+  INPUT_LINE_HEIGHT = 24
   PALETTE_MARGIN = 10
   PALETTE_LEFT_MARGIN = 0
   PALETTE_TOP_MARGIN = 0
   PALETTE_WIDTH = 300
   MIN_DRAG_DISTANCE = 5
-  FONT_SIZE = 15
+  FONT_SIZE = 24
   ANIMATION_FRAME_RATE = 50 # FPS
   SCROLL_INTERVAL = 50
+  ICE = 0
+  ACE = 1
+  BOTH = 2
 
   exports = {}
 
@@ -92,14 +95,16 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
       @ace.getSession().setMode 'ace/mode/coffee'
       @ace.getSession().setTabSize 2
       @ace.setShowPrintMargin false
-      @ace.setFontSize 15
+      @ace.setFontSize FONT_SIZE
 
-      @el = document.createElement 'div'; @el.className = 'ice_editor'
+      @el = document.createElement 'div'; @el.className = 'ice_editor'; @el.tabIndex = 0
       wrapper.appendChild @el
 
 
       # ## Field declaration ##
       # (useful to have all in one place)
+
+      @emphasizeMarkedLines = false
 
       # If we did not recieve palette blocks in the constructor, we have no palette.
       @paletteBlocks ?= []
@@ -157,14 +162,14 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
 
       # Remember the current editor state, so
       # that we can refuse animations that do not apply.
-      @currentlyUsingBlocks = true
+      @currentlyUsingBlocks = ICE
 
       # ## DOM SETUP ##
 
       # The main canvas
       @main = document.createElement 'canvas'; @main.className = 'canvas'
       @main.height = @el.offsetHeight
-      @main.width = @el.offsetWidth - PALETTE_WIDTH
+      @main.width = @el.offsetWidth * 2 - PALETTE_WIDTH
 
       # The palette canvas
       @palette = document.createElement 'canvas'; @palette.className = 'palette'
@@ -175,7 +180,7 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
       drag = document.createElement 'canvas'; drag.className = 'drag'
       drag.style.opacity = 0.85
       drag.height = @el.offsetHeight
-      drag.width = @el.offsetWidth - PALETTE_WIDTH
+      drag.width = @el.offsetWidth * 2 - PALETTE_WIDTH
 
       # The hidden input
       @hiddenInput = document.createElement 'input'; @hiddenInput.className = 'hidden_input'
@@ -194,18 +199,29 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
 
       # The main context will be used for draw.js's text measurements (this is a bit of a hack)
       draw._setCTX @mainCtx
-    
+      
+      @lastHoveredLine = -1
+      track.addEventListener 'mousemove', (event) =>
+        if @onLineHover?
+          height = event.offsetY
+          line = @getHoveredLine height
+          if line isnt @lastHoveredLine
+            @onLineHover {
+              line: line
+            }
+            @lastHoveredLine = line
       # Resize the canvases when the window resizes
       window.addEventListener 'resize', @resize = =>
         @main.height = @el.offsetHeight
-        @main.width = @el.offsetWidth - PALETTE_WIDTH
+        @main.width = @el.offsetWidth * 2 - PALETTE_WIDTH
 
         @palette.height = @el.offsetHeight
 
         drag.height = @el.offsetHeight
-        drag.width = @el.offsetWidth - PALETTE_WIDTH
+        drag.width = @el.offsetWidth * 2- PALETTE_WIDTH
 
         @redraw()
+        @redrawPalette()
 
       # ## Convenience Functions ##
       # General-purpose methods that call the view (rendering functions)
@@ -225,7 +241,7 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
         @tree.view.compute()
 
         # Draw it on the main context
-        @tree.view.draw @mainCtx
+        @tree.view.draw @mainCtx, @emphasizeMarkedLines
 
         # Alert the lasso segment, if it exists, to recompute its bounds
         if @lassoSegment?
@@ -250,6 +266,13 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
 
           # Draw it on the main context
           view.draw @mainCtx
+
+        # hacky approach to updating the other view.
+        if @currentlyUsingBlocks == BOTH and @currentlyAnimating == false
+          @currentlyAnimating = true
+          @main.style.backgroundColor = "#EEEEEE"
+          @ace.setValue @getValue(), -1
+          @currentlyAnimating = false
 
       # ## attemptReparse ##
       # This will be triggered by most cursor operations. It finds all handwritten blocks that do not contain the cursor,
@@ -328,6 +351,8 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
       # ## addMicroUndoOperation ##
       # Bureaucracy wrapper for pushing to the undo stack.
       addMicroUndoOperation = (operation) =>
+        @emphasizeMarkedLines = false
+
         # For clarity, we ensure that the operation
         # is of one of the known types.
         unless operation?.type in [
@@ -536,6 +561,8 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
           @redraw()
 
       moveCursorTo = (token) =>
+        @emphasizeMarkedLines = false
+
         # Splice out
         @cursor.remove()
 
@@ -561,6 +588,8 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
         scrollCursorIntoView()
 
       moveCursorBefore = (token) =>
+        @emphasizeMarkedLines = false
+
         # Splice out
         @cursor.remove()
 
@@ -721,8 +750,8 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
 
               @redraw()
               event.preventDefault(); return false
-          when 38 then setTextInputFocus null; @hiddenInput.blur(); moveCursorUp(); @redraw()
-          when 40 then setTextInputFocus null; @hiddenInput.blur(); moveCursorDown(); @redraw()
+          when 38 then setTextInputFocus null; @hiddenInput.blur(); moveCursorUp(); @el.focus(); @redraw()
+          when 40 then setTextInputFocus null; @hiddenInput.blur(); moveCursorDown(); @el.focus(); @redraw()
           when 37 then if @hiddenInput.selectionStart is @hiddenInput.selectionEnd and @hiddenInput.selectionStart is 0
             # Pressing the left-arrow at the leftmost end of a socket brings us to the previous socket
             head = @focus.start
@@ -751,7 +780,7 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
 
       # Bind keyboard shortcut events to the document
 
-      document.body.addEventListener 'keydown', (event) =>
+      @el.addEventListener 'keydown', (event) =>
         # Keyboard shortcuts don't apply if they were executed in a text input area
         if event.target.tagName in ['INPUT', 'TEXTAREA'] then return
 
@@ -841,6 +870,7 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
         new draw.Point x - PALETTE_WIDTH, y + scrollOffset.y 
 
       performNormalMouseDown = (point, isTouchEvent) =>
+        @emphasizeMarkedLines = false
 
         # See what we picked up
         @ephemeralSelection = hitTestFloating(point) ?
@@ -1481,15 +1511,25 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
           @redraw()
 
     setValue: (value) ->
+      errorSource = null
       try
         @ace.setValue value, -1
+        
         @tree = coffee.parse(value).segment
         @lastEditorState = @tree.clone()
-        @redraw()
-      catch
-        return false
 
-      return true
+        @redraw()
+
+      catch e
+        return {
+          errorSource: errorSource
+          error: e
+          success: false
+        }
+
+      return {
+        success: true
+      }
 
     getValue: -> @tree.stringify()
 
@@ -1497,18 +1537,19 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
     # This will animate all the text elements from their current position to a position
     # that imitates plaintext.
     _performMeltAnimation: ->
-      if @currentlyAnimating or not @currentlyUsingBlocks then return
-      else @currentlyAnimating = true; @currentlyUsingBlocks = false
+      if @currentlyAnimating or @currentlyUsingBlocks == ACE then return
+      else @currentlyAnimating = true; @currentlyUsingBlocks = ACE
 
       @redraw()
 
       # We need to find out some properties of dimensions
       # in the ace editor. So we will need to display the ace editor momentarily off-screen.
 
-      @ace.setValue @getValue(), -1
-      @aceEl.style.top = -9999
-      @aceEl.style.left = -9999
+      @aceEl.style.opacity = 0
       @aceEl.style.display = 'block'
+      @ace.setValue @getValue(), -1
+      #@aceEl.style.top = -9999
+      #@aceEl.style.left = -9999
 
       # We must wait for the Ace editor to render before we continue.
       # Ace actually takes some time with webworkers to determine some things like line height,
@@ -1535,7 +1576,7 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
           lineHeight: @ace.renderer.layerConfig.lineHeight
           leftEdge: @ace.container.getBoundingClientRect().left - findPosLeft(@aceEl) + @ace.renderer.$gutterLayer.gutterWidth
 
-        while head isnt @tree.end
+        while head isnt @tree.end and head != null
           if head.type is 'text'
             translationVectors.push head.view.computePlaintextTranslationVector state, @mainCtx
             textElements.push head
@@ -1561,7 +1602,7 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
           if count < ANIMATION_FRAME_RATE
             setTimeout tick, 1000 / ANIMATION_FRAME_RATE
 
-          @main.style.left = PALETTE_WIDTH * (1 - count / ANIMATION_FRAME_RATE)
+          @main.style.left = "#{PALETTE_WIDTH * (1 - count / ANIMATION_FRAME_RATE)}px"
           @el.style.backgroundColor = @main.style.backgroundColor = animatedColor.advance()
           @palette.style.opacity = Math.max 0, 1 - 2 * (count / ANIMATION_FRAME_RATE)
 
@@ -1582,9 +1623,7 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
           if count >= ANIMATION_FRAME_RATE
             @el.style.display = 'none'
 
-            @aceEl.style.top = 0
-            @aceEl.style.left = 0
-            @aceEl.style.display = 'block'
+            @aceEl.style.opacity = 1
             @aceEl.style.height = '100%'
 
             # We need to trigger an ace resize event by hand,
@@ -1598,17 +1637,20 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
         tick()
       ), 1
 
-      return true
+      return {
+        success: true
+      }
 
     _performFreezeAnimation: ->
-      if @currentlyAnimating or @currentlyUsingBlocks then return
-      else @currentlyAnimating = true; @currentlyUsingBlocks = true
+      if @currentlyAnimating or @currentlyUsingBlocks == ICE then return
+      else @currentlyAnimating = true; @currentlyUsingBlocks = ICE
 
       # In the case that we do not successfully set our value
       # (i.e. we failed to parse the text), give up immediately.
-      unless @setValue @ace.getValue(), -1
-        @currentlyAnimating = false; @currentlyUsingBlocks = false
-        return false
+      setValueResult = @setValue @ace.getValue()[...-1]
+      unless setValueResult.success is true
+        @currentlyAnimating = false; @currentlyUsingBlocks = ACE
+        return setValueResult
 
       @redraw()
       # First, we will need to get all the text elements which we will be animating.
@@ -1625,7 +1667,7 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
         indent: 0
         lineHeight: @ace.renderer.layerConfig.lineHeight
         leftEdge: @ace.container.getBoundingClientRect().left - findPosLeft(@aceEl) + @ace.renderer.$gutterLayer.gutterWidth
-      while head isnt @tree.end
+      while head isnt @tree.end and head != null
         if head.type is 'text'
           translationVectors.push head.view.computePlaintextTranslationVector state, @mainCtx
           head.view.translate translationVectors[translationVectors.length - 1]
@@ -1654,7 +1696,7 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
         if count < ANIMATION_FRAME_RATE
           setTimeout tick, 1000 / ANIMATION_FRAME_RATE
 
-        @main.style.left = PALETTE_WIDTH * (count / ANIMATION_FRAME_RATE)
+        @main.style.left = "#{PALETTE_WIDTH * (count / ANIMATION_FRAME_RATE)}px"
         @el.style.backgroundColor = @main.style.backgroundColor = animatedColor.advance()
         @palette.style.opacity = Math.max 0, 1 - 2 * (1 - count / ANIMATION_FRAME_RATE)
 
@@ -1676,10 +1718,100 @@ define ['ice-coffee', 'ice-draw', 'ice-model'], (coffee, draw, model) ->
 
       tick()
 
-      return true
+      return {
+        success: true
+      }
+
+    # ## performBothAnimation ##
+    _performBothAnimation: ->
+      if @currentlyAnimating or @currentlyUsingBlocks == BOTH then return
+      else @currentlyAnimating = true; @currentlyUsingBlocks = BOTH
+
+      @redraw()
+
+      # We need to find out some properties of dimensions
+      # in the ace editor. So we will need to display the ace editor momentarily off-screen.
+      @ace.setValue @getValue(), -1
+      @aceEl.style.display = 'block'
+      @aceEl.style.left = "450px"
+      @aceEl.style.zIndex = 4
+
+      PALETTE_WIDTH = 200
+      @palette.style.width = "#{PALETTE_WIDTH}px"
+      @main.style.left = "#{PALETTE_WIDTH}px"
+
+      @currentlyAnimating = false
+
+      return {
+        success: true
+      }
+
+    # ## performOneAnimation ##
+    _performOneAnimation: ->
+      if @currentlyAnimating or @currentlyUsingBlocks == ICE then return
+      else @currentlyAnimating = true; @currentlyUsingBlocks = ICE
+
+      @aceEl.style.display = 'none'
+      @aceEl.style.left = "0px"
+
+      PALETTE_WIDTH = 300
+      @palette.style.width = "#{PALETTE_WIDTH}px"
+      @main.style.left = "#{PALETTE_WIDTH}px"
+
+      @currentlyAnimating = false
+
+      return {
+        success: true
+      }
+
+    _performUpdateFromText: ->
+      @currentlyAnimating = true
+      setValueResult = @setValue @ace.getValue()[...-1]
+      if setValueResult.success == false
+        @main.style.backgroundColor = "#FFCCCC"
+      else
+        @main.style.backgroundColor = "#EEEEEE"
+      @currentlyAnimating = false
 
     toggleBlocks: ->
-      if @currentlyUsingBlocks then @_performMeltAnimation()
-      else @_performFreezeAnimation()
+      if @currentlyUsingBlocks == ICE then @_performMeltAnimation()
+      else if @currentlyUsingBlocks == ACE then @_performFreezeAnimation()
+      # TODO(dkogan): Implement animations from BOTH
 
+    toggleBoth: ->
+      if @currentlyUsingBlocks == ICE then @_performBothAnimation()
+      else if @currentlyUsingBlocks == BOTH then @_performOneAnimation()
+
+    notifyChange: ->
+      if @currentlyUsingBlocks == BOTH and @currentlyAnimating == false
+        newText = @ace.getValue()[...-1]
+        if newText != @lastText
+          @_performUpdateFromText(newText)
+        @lastText = newText
+
+    setEmphasizeMarkedLines: (value) ->
+      @emphasizeMarkedLines = value
+
+    markLine: (line) ->
+      block = @tree.getBlockOnLine(line)
+      unless block? then return
+      
+      block.lineMarked = true
+      @redraw()
+
+    unmarkLines: ->
+      head = @tree.start
+      until head is @tree.end
+        if head.type is 'blockStart' then head.block.lineMarked = false
+        head = head.next
+
+    getHoveredLine: (offsetTop) ->
+      runningHeight = 0
+      for line in [@tree.view.lineStart..@tree.view.lineEnd]
+        runningHeight += @tree.view.dimensions[line].height
+        if offsetTop < runningHeight
+          return line
+
+      return @tree.view.lineEnd
+    
   return exports

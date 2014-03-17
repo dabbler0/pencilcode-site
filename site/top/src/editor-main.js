@@ -323,6 +323,7 @@ view.on('run', function() {
   var runtext = mimetext && mimetext.text;
   var newdata = $.extend({}, modelatpos('left').data, {data: runtext});
   view.clearPaneEditorMarks(paneatpos('left'));
+  view.setPaneEmphasizeMarkedBlocks(paneatpos('left'));
   if (!specialowner()) {
     // Save file (backup only)
     storage.saveFile(model.ownername,
@@ -1200,6 +1201,25 @@ function loadFileIntoPosition(position, filename, isdir, forcenet, cb) {
         mpp.isdir = false;
         mpp.data = m;
         view.setPaneEditorText(pane, m.data, filename);
+
+        var id = uniqueToggleButtonId();
+        var id2 = uniqueToggleButtonId();
+        view.setPaneTitleExtra(pane, '<button id="' + id + '">toggle</button> <button id="' + id2 + '">both</button>');
+
+        document.getElementById(id).addEventListener('click', function() {
+          var toggle = view.togglePaneEditorBlocks(pane);
+          if (!toggle.success) {
+            view.markPaneEditorLine(pane, toggle.error.location.first_line+1, 'debugerror');
+          }
+        });
+
+        document.getElementById(id2).addEventListener('click', function() {
+          var toggle = view.togglePaneEditorBoth(pane);
+          if (!toggle.success) {
+            view.markPaneEditorLine(pane, toggle.error.location.first_line+1, 'debugerror');
+          }
+        });
+
         noteIfUnsaved(posofpane(pane));
         updateTopControls(false);
         cb && cb();
@@ -1207,6 +1227,12 @@ function loadFileIntoPosition(position, filename, isdir, forcenet, cb) {
     });
   }
 };
+
+var latestToggleId = 0;
+
+function uniqueToggleButtonId() {
+  return 'toggle_button_ ' + (latestToggleId += 1);
+}
 
 function sortByDate(a, b) {
   return b.mtime - a.mtime;
